@@ -11,6 +11,8 @@
   --hub-matrix: min(clamp(300px,25vw,378px),calc(50vw - var(--hub-inset) - var(--hub-title-offset) - var(--hub-gutter) - var(--hub-nav-gap)));
   --gallery-work-width: calc(var(--hub-inset) * 2 + var(--hub-title-offset) * 2 + var(--hub-nav-gap) * 2 + var(--hub-matrix) * 1.56);
   --work-circle-size: 107.1225px;
+  /* Approved nine-circle desktop composition; authored photo/line base is482px. */
+  --gallery-work-width-limit: 964.1025px;
   --tile-size: 55.066667px;
   --matrix-columns: 9;
   --header-gap: 33px;
@@ -29,7 +31,7 @@
 }
 .matrix-frame {
   position:relative;
-  width:max(var(--gallery-work-width),var(--header-min-frame-width,0px));max-width:calc(100% - 48px);
+  width:max(var(--gallery-work-width),var(--header-min-frame-width,0px));max-width:min(calc(100% - 48px),var(--gallery-work-width-limit));
   margin:var(--matrix-top-offset,190px) auto 0;
   border:0;border-radius:0;
   background:transparent;

@@ -4,6 +4,8 @@
   const $=s=>document.querySelector(s);
   const {value,number}=window.GalleryCustomization;
   const editorFrame=new URLSearchParams(location.search).has('editor_view');
+  const releaseKey=!editorFrame&&document.currentScript?.src?new URL(document.currentScript.src,location.href).searchParams.get('v'):null;
+  function pageHref(file){if(!releaseKey)return file;const url=new URL(file,location.href);url.searchParams.set('v',releaseKey);return url.href;}
   if('scrollRestoration' in history)history.scrollRestoration='manual';
   let entryInteracted=false;
   for(const type of ['wheel','touchstart','pointerdown','keydown'])addEventListener(type,()=>{entryInteracted=true;},{passive:true});
@@ -64,8 +66,10 @@
     <span class="tab-number">${esc(value(`menu:${id}:number`, String(index + 1).padStart(2, "0")))}</span><span class="tab-name"${id===page ? ` style="color:${esc(value(`menu:${id}:activeColor`,"#202124"))}"` : ""}>${esc(name)}</span>
   </button>`; }).join("");
   document.querySelectorAll("[data-menu]:enabled").forEach(button=>button.addEventListener("click",()=>{
-    location.href=pages[button.dataset.menu];
+    location.href=pageHref(pages[button.dataset.menu]);
   }));
+
+  if(releaseKey){const brand=document.querySelector('.brand-pill');if(brand)brand.href=pageHref(pages.home);}
 
   const header=document.querySelector('.matrix-header'),nav=document.querySelector('.section-tabs');
   const matrixFrame=document.querySelector('.matrix-frame');

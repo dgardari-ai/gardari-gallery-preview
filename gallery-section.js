@@ -163,7 +163,7 @@
     if(updateHash&&location.hash!=='#'+slides[active].id)history.replaceState(null,'','#'+slides[active].id);
     reportContext();return true;
   }
-  function fitWidth(){const diameter=number('matrix:circleSize',107.1225),rows=number('matrix:rows',5);const columns=Math.max(1,Math.min(Math.floor($('.matrix-frame').getBoundingClientRect().width/diameter),Math.floor(60/rows)));$('#matrix-pack').style.setProperty('--matrix-columns',String(columns));window.GalleryHeaderMotion?.update();window.GalleryHeaderQuote?.refit();}
+  function fitWidth(){const diameter=number('matrix:circleSize',107.1225),rows=number('matrix:rows',5);const columns=Math.max(1,Math.min(Math.floor(($('.matrix-frame').getBoundingClientRect().width+.01)/diameter),Math.floor(60/rows)));$('#matrix-pack').style.setProperty('--matrix-columns',String(columns));window.GalleryHeaderMotion?.update();window.GalleryHeaderQuote?.refit();}
   function outerHeight(node){const style=getComputedStyle(node);return node.getBoundingClientRect().height+px(style.marginTop)+px(style.marginBottom);}
   function naturalCardHeight(index){
     const body=bodies[index],box=body.getBoundingClientRect();

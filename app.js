@@ -33,7 +33,7 @@
     if (newEntry || !state.order.length) state.order = editorOrder ? editorOrder.map(id=>state.works.find(w=>w.id===id)).filter(Boolean) : shuffled(state.works);
     const diameter = parseFloat(getComputedStyle(matrix).getPropertyValue("--work-circle-size"));
     const columns = artist?5:Math.max(1, Math.min(
-      Math.floor($(".matrix-frame").getBoundingClientRect().width / diameter),
+      Math.floor(($(".matrix-frame").getBoundingClientRect().width + .01) / diameter),
       Math.floor(state.works.length / number("matrix:rows",5))
     ));
     if (!newEntry && columns === state.columns) return;
