@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Художник · Галерея Гардари</title>
+  <link rel="preload" href="assets/JetBrainsMono-cyrillic-400-500.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="legacy.css">
+  <link rel="stylesheet" href="matrix.css">
+  <link rel="stylesheet" href="gallery-editor.css">
+  <link rel="stylesheet" href="gallery-section.css">
+  <link rel="stylesheet" href="section-pages.css">
+  <link rel="stylesheet" href="artwork-panel.css">
+  <script src="gallery-settings.js" defer></script>
+  <script src="gallery-customization.js" defer></script>
+  <script src="quote-phrases.js" defer></script>
+  <script src="header-quote.js" defer></script>
+  <script src="gallery-header.js" defer></script>
+  <script src="section-pages-data.js" defer></script>
+  <script src="artwork-panel.js" defer></script>
+  <script src="section-pages.js" defer></script>
+  <script src="gallery-section.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body class="gallery-page section-page" data-section-pages="1" data-gallery-sections="1" data-page="artist" data-gallery-editor="1" data-gallery-composition="1" data-gallery-scroll="1" data-gallery-carousel="1" data-gallery-version="1.0">
+  <main class="matrix-shell">
+    <h1 class="visually-hidden" id="page-title">Художник</h1>
+    <section class="matrix-frame" aria-label="Художник">
+      <div class="matrix-pack" id="matrix-pack">
+        <header class="matrix-header">
+          <a class="brand-pill" href="./index.html" aria-label="Главная галереи" aria-describedby="quote-accessible">
+            <span class="brand-disc"><svg class="brand-pill-logo" viewBox="88 112 306 303" aria-hidden="true" focusable="false"><image href="assets/gallery-logo-original.png" width="490" height="490"></image></svg></span>
+            <span class="brand-quote" id="brand-quote"><span class="visually-hidden" id="quote-accessible"></span><span class="quote-measure" aria-hidden="true"></span><span class="quote-typed" aria-hidden="true"></span></span>
+          </a>
+          <nav class="section-tabs" aria-label="Разделы галереи"><div class="tab-strip" id="section-tabs"></div></nav>
+        </header>
+        <div class="gallery-layout" id="gallery-layout">
+          <div class="gallery-text">
+            <div class="gallery-stack" id="gallery-stack"></div>
+          </div>
+          <aside class="gallery-visual" id="gallery-visual" aria-label="Фотографии раздела"></aside>
+        </div>
+        <div class="section-details" id="section-details" hidden></div>
+        <section class="catalog" id="section-catalog" aria-label="Произведения" hidden>
+          <div class="catalog-tools"><div class="filters" id="series-filters" role="group" aria-label="Фильтр по сериям"></div></div>
+          <div class="works-grid" id="works-grid" aria-busy="true"></div>
+        </section>
+        <section class="artist-books" id="artist-books" aria-label="Книги Дениса Гардари" hidden></section>
+        <section class="artist-work-gallery" id="artist-work-gallery" aria-label="Галерея работ художника" hidden></section>
+        <nav class="artist-links" id="artist-links" aria-label="Другие материалы художника" hidden></nav>
+      </div>
+    </section>
+  </main>
+  <dialog class="gallery-photo-dialog" id="gallery-photo-dialog" aria-label="Фотография галереи">
+    <button type="button" class="gallery-small-button gallery-photo-close" id="gallery-photo-close" aria-label="Закрыть фотографию">×</button>
+    <img id="gallery-photo-full" alt="">
+  </dialog>
+  <dialog class="work-dialog" id="work-dialog" aria-labelledby="work-title">
+    <div class="drawer-head">
+      <span>ГАЛЕРЕЯ ГАРДАРИ <span id="work-counter"></span></span>
+      <button type="button" class="drawer-close" id="drawer-close" aria-label="Закрыть карточку произведения">×</button>
+    </div>
+    <div class="drawer-scroll" id="drawer-content"></div>
+  </dialog>
+<!-- VMG-DESIGNER:START -->
+<script defer src="vmg-designer-data.js"></script>
+<script defer src="vmg-designer-runtime.js"></script>
+<!-- VMG-DESIGNER:END -->
+</body>
+</html>

@@ -1,0 +1,93 @@
+/* Each complete text/photo pair is present in normal flow from entry. */
+html,body.gallery-page { overscroll-behavior-y:contain; }
+.gallery-page .matrix-pack { max-width:100%; }
+.gallery-layout { --gallery-page-background:var(--paper);--gallery-paragraph-gap:16.8px;--gallery-block-gap:21px;--gallery-body-top:0px;--gallery-stroke:var(--header-stroke-width,1px);display:grid;grid-template-columns:minmax(0,var(--section-left-column,1fr)) minmax(0,var(--section-right-column,1fr));gap:0;align-items:start;border:0 solid var(--ink); }
+.gallery-text,.gallery-stack { min-width:0;border:0 solid var(--ink); }
+.gallery-text { padding-right:var(--section-column-gap,70px); }
+.gallery-stack { display:flex;flex-direction:column; }
+.gallery-stack::after { content:"";display:block;flex:0 0 var(--gallery-tail-space,0px);height:var(--gallery-tail-space,0px);pointer-events:none; }
+.gallery-case { display:block;flex:0 0 auto;min-height:0;height:var(--gallery-case-span,auto);margin-bottom:calc(-1 * var(--gallery-case-overlap,0px)); }
+.gallery-case-header,.gallery-case-body,.gallery-row-spacer { flex:0 0 auto;min-width:0; }
+.gallery-case-header { position:relative;display:flex;align-items:center;gap:0;min-height:0;padding:var(--gallery-block-gap) 0;border:0 solid transparent;border-top-width:1px;background:var(--gallery-page-background);scroll-margin-top:var(--section-current-content-top); }
+.gallery-case-heading { display:flex;gap:0;align-items:last baseline;min-width:0;width:100%;margin:0;padding:0;border:0 solid var(--ink);background:transparent;color:inherit;text-align:inherit;letter-spacing:inherit;font:inherit;text-transform:inherit; }
+.gallery-case-heading > span { flex:1;min-width:0;overflow-wrap:anywhere; }
+.gallery-heading-line { display:block;white-space:nowrap;overflow-wrap:normal; }
+.gallery-case h2 { margin:0;width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;border:0 solid var(--ink);font:700 clamp(26px,2.2vw,34px)/1.08 Arial,Helvetica,sans-serif;letter-spacing:-.05em;text-transform:uppercase; }
+.gallery-case-header[data-title-empty="true"] { min-height:1px;height:1px;padding:0; }
+.gallery-case-header[data-title-empty="true"] h2 { height:0;overflow:hidden; }
+.gallery-case-body { position:relative;padding:var(--gallery-body-top) 0 0;border:0 solid transparent;background:var(--gallery-page-background); }
+.gallery-case-body p { margin:0 0 var(--gallery-paragraph-gap);border:0 solid var(--ink);font:400 19px/1.45 Arial,Helvetica,sans-serif;letter-spacing:-.01em;color:var(--body);overflow-wrap:break-word; }
+.gallery-case-body p:last-child { margin-bottom:0; }
+.gallery-case:last-child .gallery-case-body { border-bottom-width:0; }
+.gallery-row-spacer { display:block;height:0;pointer-events:none; }
+.gallery-visual { position:relative;display:flex;flex-direction:column;align-self:stretch;min-width:0;padding-top:0;border:0 solid var(--ink); }
+.gallery-media-panel { position:relative;flex:0 0 auto;min-width:0;min-height:0;background:var(--gallery-page-background);z-index:calc(2 + var(--gallery-index)); }
+.gallery-media-row-spacer { display:block;flex:0 0 auto;height:0;pointer-events:none; }
+.gallery-media-block { position:relative;left:50%;width:100%;transform:translateX(-50%);display:flow-root; }
+.gallery-photo-stack { position:relative;display:block;width:100%;height:auto;aspect-ratio:1.6;overflow:hidden;margin:0;border:var(--gallery-stroke) solid var(--ink); }
+.gallery-photo-viewport { position:relative;display:block;width:100%;height:100%;overflow:hidden;border-radius:inherit; }
+.gallery-photo-open { position:relative;display:block;width:100%;height:100%;padding:0;margin:0;border:0;border-radius:0;background:transparent;cursor:zoom-in; }
+.gallery-photo-open:disabled { cursor:default; }
+.gallery-photo-missing { display:grid;place-items:center;width:100%;height:100%;padding:24px;border:1px solid var(--line);color:var(--body);font:400 12px/1.5 var(--mono);text-align:center; }
+.gallery-photo { position:absolute;left:50%;top:50%;display:block;width:100%;height:100%;max-width:none;border:0;border-radius:0;opacity:0;visibility:hidden;transform:translate(-50%,-50%);transition:opacity 250ms ease,visibility 250ms; }
+.gallery-photo[aria-hidden="false"] { opacity:1;visibility:visible; }
+.gallery-photo-controls { position:absolute;top:50%;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;transform:translateY(-50%);pointer-events:none; }
+.gallery-photo-controls[hidden] { display:none; }
+.gallery-small-button { display:grid;place-items:center;flex:none;width:28px;height:28px;min-height:0;padding:0;border:1px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink);font:400 12px/1 var(--mono);letter-spacing:0;pointer-events:auto;transition:background-color 150ms,transform 85ms; }
+.gallery-photo-controls .gallery-small-button { border-color:rgba(255,255,255,.95);background:rgba(32,33,36,.35);color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+.gallery-small-button svg { display:block;width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round; }
+@media(hover:hover) { .gallery-small-button:hover { background:var(--almost); } }
+@media(hover:hover) { .gallery-photo-controls .gallery-small-button:hover { background:rgba(32,33,36,.55);border-color:#fff; } }
+.gallery-small-button:active { transform:scale(.97); }
+.gallery-layout[data-stack-mode="stack"] .gallery-case-header { position:sticky;top:calc(var(--section-current-content-top) + var(--gallery-header-offset));z-index:calc(20 + var(--gallery-index));isolation:isolate; }
+.gallery-layout[data-stack-mode="stack"] .gallery-case-body { position:relative;z-index:calc(2 + var(--gallery-index)); }
+.gallery-layout:is([data-stack-mode="stack"],[data-stack-mode="flow"]) .gallery-media-panel { position:sticky;top:min(var(--section-current-content-top),calc(100svh - var(--gallery-media-height) - 24px)); }
+.gallery-layout[data-editing="true"] .gallery-photo { transition:none; }
+.gallery-photo-dialog { width:min(1147px,calc(100vw - 48px));height:min(900px,calc(100svh - 48px));max-height:none;max-width:none;margin:auto;padding:36px 12px 12px;border:1px solid var(--ink);border-radius:0;background:var(--paper);overflow:hidden; }
+.gallery-photo-dialog::backdrop { background:rgba(32,33,36,.72); }
+.gallery-photo-dialog img { width:100%;height:100%;object-fit:contain;border-radius:0; }
+.gallery-photo-close { position:absolute;top:5px;right:7px;font-size:20px; }
+@media(max-width:1024px) { .gallery-case-body { padding:var(--gallery-body-top) 0 0; } }
+@media(max-width:700px) { .gallery-text { padding-right:min(var(--section-column-gap,70px),12px,25%); }.gallery-case-header { min-height:0;gap:0;padding:var(--gallery-block-gap) 0; }.gallery-case h2 { font-size:clamp(23px,6vw,26px); }.gallery-case-body p { font-size:17px; }.gallery-photo-controls { left:7px;right:7px; }.gallery-photo-dialog { width:calc(100vw - 20px);height:calc(100svh - 24px); } }
+@media(prefers-reduced-motion:reduce) { .gallery-photo,.gallery-small-button { transition:none; } }
+
+/* Real decorative rules keep the original one-pixel layout reservations. */
+.gallery-rule { position:absolute;display:block;left:0;top:-1px;width:100%;height:1px;margin:0;padding:0;border:0;background:var(--line); }
+.gallery-rule--bottom { top:100%;bottom:auto; }
+
+/* Narrow pages retain authored line lengths up to the text/photo column seam. */
+@media(max-width:700px) { .gallery-page .gallery-rule { max-width:calc(100% + min(var(--section-column-gap,70px),12px,25%)); } }
+
+/* The final rule spans both tracks. The sticky final photo is constrained by
+   that same lower edge, so rule and photograph leave the viewport together. */
+.gallery-page .gallery-layout > .gallery-rule--bottom { position:relative;grid-column:1 / -1;top:auto;bottom:auto;left:auto;width:100%;max-width:none;height:var(--gallery-stroke);background:var(--ink);z-index:50;transform:translateY(calc(-1 * var(--gallery-stroke))); }
+
+.gallery-layout::after { content:"";grid-column:1 / -1;height:var(--gallery-exit-space,0px);pointer-events:none; }
+
+.gallery-case-body > p:empty { margin:0;padding:0;border:0; }
+.gallery-case-body > p.is-final-text { margin-bottom:0; }
+.gallery-page .gallery-media-panel [data-gallery-frame="glass-1"] { border-left-width:0;border-right-width:0;border-bottom-width:0; }
+
+/* Once joined, only the common rule paints the shared one-pixel edge. */
+.gallery-photo-stack.is-bottom-joined { clip-path:inset(0 0 var(--gallery-stroke) 0); }
+
+/* Padding is part of the opaque sticky title, including during motion. */
+.gallery-case-header[data-title-empty="true"] + .gallery-case-body { padding-top:var(--gallery-block-gap); }
+/* A CSS cover follows the incoming photo on the same compositor frame. */
+.gallery-visual { overflow-x:visible;overflow-y:clip; }
+.gallery-media-panel::after { content:"";position:absolute;left:0;top:100%;width:100%;height:100vh;background:var(--gallery-page-background);pointer-events:none; }
+.gallery-photo-controls .gallery-small-button svg { stroke-width:1.8; }
+
+.gallery-block-actions { margin:0; }
+.gallery-action-button { display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-height:var(--content-button-height,43.2px);padding:6px clamp(16px,1.7vw,24px);border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--paper);font:400 clamp(10px,.9vw,12px)/1.3 var(--mono);letter-spacing:-.01em;text-align:center;text-decoration:none; }
+.gallery-action-button:is(:hover,:focus-visible) { background:#35373a; }
+
+/* The same two-row circle composition in Gallery and Artist. */
+.gallery-photo-matrix-block { margin:66px 0 44px; }
+.section-orb-matrix { aspect-ratio:5 / 2;--matrix-columns:5;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:auto;min-height:0; }
+.section-orb-matrix .work-orb { width:100%;height:auto;aspect-ratio:1; }
+.section-orb-matrix .work-orb-viewport { position:absolute;inset:0;width:100%;height:100%; }
+/* Authored rule lengths stay within the responsive text/photo seam. */
+.gallery-layout { --gallery-column-inset:var(--section-column-gap,70px); }
+.gallery-page .gallery-case-header > .gallery-rule { max-width:calc(100% + var(--gallery-column-inset)); }
+@media(max-width:700px) { .gallery-layout { --gallery-column-inset:min(var(--section-column-gap,70px),12px,25%); } }

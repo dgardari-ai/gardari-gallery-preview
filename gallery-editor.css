@@ -1,0 +1,36 @@
+/* Generated settings; the original artwork files are unchanged. */
+[data-menu="home"]{--tile-fill:#202124;--tile-active-fill:#D8C62A;--tile-ink:#FFFFFF;--tile-active-ink:#202124;--badge-fill:#202124;--badge-ink:#e4e6e8;--badge-active-fill:#d8c62a;--badge-active-ink:#202124}
+[data-menu="gallery"]{--tile-fill:#202124;--tile-active-fill:#D8C62A;--tile-ink:#FFFFFF;--tile-active-ink:#202124;--badge-fill:#202124;--badge-ink:#e4e6e8;--badge-active-fill:#d8c62a;--badge-active-ink:#202124}
+[data-menu="painting"]{--tile-fill:#202124;--tile-active-fill:#D8C62A;--tile-ink:#FFFFFF;--tile-active-ink:#202124;--badge-fill:#202124;--badge-ink:#e4e6e8;--badge-active-fill:#d8c62a;--badge-active-ink:#202124}
+[data-menu="digital"]{--tile-fill:#202124;--tile-active-fill:#D8C62A;--tile-ink:#FFFFFF;--tile-active-ink:#202124;--badge-fill:#202124;--badge-ink:#e4e6e8;--badge-active-fill:#d8c62a;--badge-active-ink:#202124}
+[data-menu="glass"]{--tile-fill:#202124;--tile-active-fill:#D8C62A;--tile-ink:#FFFFFF;--tile-active-ink:#202124;--badge-fill:#202124;--badge-ink:#e4e6e8;--badge-active-fill:#d8c62a;--badge-active-ink:#202124}
+[data-menu="artist"]{--tile-fill:#202124;--tile-active-fill:#D8C62A;--tile-ink:#FFFFFF;--tile-active-ink:#202124;--badge-fill:#202124;--badge-ink:#e4e6e8;--badge-active-fill:#d8c62a;--badge-active-ink:#202124}
+[data-menu="contacts"]{--tile-fill:#202124;--tile-active-fill:#D8C62A;--tile-ink:#FFFFFF;--tile-active-ink:#202124;--badge-fill:#202124;--badge-ink:#e4e6e8;--badge-active-fill:#d8c62a;--badge-active-ink:#202124}
+[data-menu][aria-pressed="true"] .tab-name{color:var(--tile-active-ink,var(--ink))}
+.brand-pill{background-color:#FFFFFF !important}
+[data-menu="home"]{--tile-stroke:#A8ADB2 !important}
+[data-menu="home"] .tab-name{font-size:8px !important}
+[data-menu="gallery"]{--tile-stroke:#A8ADB2 !important}
+[data-menu="gallery"] .tab-name{font-size:8px !important}
+[data-menu="painting"]{--tile-stroke:#A8ADB2 !important}
+[data-menu="painting"] .tab-name{font-size:8px !important}
+[data-menu="digital"]{--tile-stroke:#A8ADB2 !important}
+[data-menu="digital"] .tab-name{font-size:8px !important}
+[data-menu="glass"]{--tile-stroke:#A8ADB2 !important}
+[data-menu="glass"] .tab-name{font-size:8px !important}
+[data-menu="artist"]{--tile-stroke:#A8ADB2 !important}
+[data-menu="artist"] .tab-name{font-size:8px !important}
+[data-menu="contacts"]{--tile-stroke:#A8ADB2 !important}
+[data-menu="contacts"] .tab-name{font-size:8px !important}
+#gallery-space .gallery-case-header{min-height:60px !important}
+#gallery-space h2{font-weight:900 !important;line-height:32px !important;font-size:30px !important}
+#gallery-space .gallery-case-body p{line-height:23px !important}
+[data-gallery-frame="space"][data-gallery-frame-style="0"]{border-width:1px !important;border-color:#202124 !important}
+#gallery-events h2{line-height:32px !important;font-size:30px !important}
+#gallery-events .gallery-case-body p{line-height:23px !important}
+#gallery-directions h2{line-height:32px !important;font-size:30px !important}
+#gallery-directions .gallery-case-body p{line-height:23px !important}
+[data-gallery-frame="directions"][data-gallery-frame-style="0"]{border-width:1px !important;border-color:#202124 !important}
+#gallery-line-space-top{width:482px !important;background-color:#202124 !important}
+#gallery-line-events-top{background-color:#202124 !important;width:482px !important}
+#gallery-line-directions-top{width:482px !important;background-color:#202124 !important}
