@@ -1,0 +1,9 @@
+/* Contacts use the common five-pair scroll slider and native editor fields. */
+.contacts-page .gallery-case h2 {-webkit-text-stroke:0;}
+.contacts-page .gallery-block-actions {display:grid;gap:11px;justify-items:stretch;}
+.contacts-page .gallery-block-actions .gallery-action-button {width:100%;}
+.contacts-page .gallery-action-button:is(:hover,:focus-visible) {background:var(--accent);border-color:var(--accent);color:#000;}
+.contacts-page .contacts-route {background:var(--paper);color:var(--ink);}
+.contacts-page .gallery-action-button[aria-disabled="true"] {cursor:default;}
+
+.contacts-page .gallery-heading-line {white-space:normal;overflow-wrap:anywhere;}

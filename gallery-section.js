@@ -12,7 +12,7 @@
       const image=slide.images[slot]||slide.images[0]||{src:'',alt:'',width:1,height:1};
       const src=value(`gallery:${slide.id}:image:${slot}`,image.src),chosen=knownImages.get(src)||image;
       return {...image,...chosen,slot,src,alt:value(`gallery:${slide.id}:alt:${slot}`,image.alt),
-        crop:{zoom:number(`gallery:${slide.id}:zoom:${slot}`,100),x:number(`gallery:${slide.id}:x:${slot}`,0),y:number(`gallery:${slide.id}:y:${slot}`,0),aspect:value(`gallery:${slide.id}:aspect:${slot}`,'original')},
+        crop:{zoom:number(`gallery:${slide.id}:zoom:${slot}`,image.crop?.zoom??100),x:number(`gallery:${slide.id}:x:${slot}`,image.crop?.x??0),y:number(`gallery:${slide.id}:y:${slot}`,image.crop?.y??0),aspect:value(`gallery:${slide.id}:aspect:${slot}`,image.aspect||'original')},
         frame:{width:number(`gallery:${slide.id}:frameWidth:0`,0),height:number(`gallery:${slide.id}:frameHeight:0`,0),x:number(`gallery:${slide.id}:frameX:0`,0),y:number(`gallery:${slide.id}:frameY:0`,0)}};
     })}));
   const layout=$('#gallery-layout'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -30,13 +30,18 @@
     return `<p data-gallery-paragraph="${index}"${format?' class="gallery-format-note"':''}>${html}</p>`;
   }
   function actionMarkup(slide){
-    const links=(slide.actions||[]).map(action=>{
-      try{const url=new URL(action.href,location.href);if(!['https:','http:'].includes(url.protocol))return '';return `<a class="gallery-action-button" href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">${esc(action.label)}</a>`;}catch{return '';}
+    const contacts=document.body.dataset.page==='contacts';
+    const links=(slide.actions||[]).map((action,index)=>{
+      if(!contacts){try{const url=new URL(action.href,location.href);if(!['https:','http:'].includes(url.protocol))return '';return `<a class="gallery-action-button" href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">${esc(action.label)}</a>`;}catch{return '';}}
+      const prefix=`page:contacts:action:${slide.id}:${index}:`,label=value(prefix+'label',action.label),href=value(prefix+'href',action.href||''),attr=`data-contact-action="${esc(slide.id)}-${index}"`;
+      if(action.type==='photo')return `<button type="button" class="gallery-action-button contacts-route" ${attr} data-contact-photo="${esc(action.image)}" data-contact-alt="${esc(action.alt)}">${esc(label)}</button>`;
+      if(!href)return `<button type="button" class="gallery-action-button" ${attr} aria-disabled="true">${esc(label)}</button>`;
+      try{const url=new URL(href,location.href);if(!['https:','http:','mailto:'].includes(url.protocol))return '';return `<a class="${action.type==='email'?'contacts-email':'gallery-action-button'}" ${attr} href="${esc(url.href)}"${url.protocol==='mailto:'?'':' target="_blank" rel="noopener noreferrer"'}>${esc(label)}</a>`;}catch{return '';}
     }).join('');
     return links?`<div class="gallery-block-actions">${links}</div>`:'';
   }
   function headingRows(title){
-    const text=String(title),words=Array.from(text.matchAll(/\s+/gu));
+    const text=String(title);if(document.body.dataset.page==='contacts')return [text];const words=Array.from(text.matchAll(/\s+/gu));
     if(!words.length)return [text,''];
     const conjunction=text.match(/^(.+?\s+и)(\s+)(.+)$/iu);
     const split=conjunction?conjunction[1].length+conjunction[2].length
@@ -98,7 +103,7 @@
     const anchor=slides[index].images[0],preview=previews.get(slides[index].id);
     const prefix=`gallery:${slides[index].id}:`;
     const fallback=anchor?.frame||{width:number(prefix+'frameWidth:0',0),height:number(prefix+'frameHeight:0',0),x:number(prefix+'frameX:0',0),y:number(prefix+'frameY:0',0)};
-    return {...fallback,aspect:value(`gallery:${slides[index].id}:aspect:0`,'original'),...(preview?preview.values:{})};
+    return {...fallback,aspect:value(`gallery:${slides[index].id}:aspect:0`,anchor?.aspect||'original'),...(preview?preview.values:{})};
   }
   function edges(frame){const style=getComputedStyle(frame);return {horizontal:px(style.paddingLeft)+px(style.paddingRight)+px(style.borderLeftWidth)+px(style.borderRightWidth),vertical:px(style.paddingTop)+px(style.paddingBottom)+px(style.borderTopWidth)+px(style.borderBottomWidth),marginTop:px(style.marginTop),marginBottom:px(style.marginBottom),marginLeft:px(style.marginLeft),marginRight:px(style.marginRight)};}
   function availableWidth(index){const style=getComputedStyle(panels[index]);return Math.max(1,panels[index].clientWidth-px(style.paddingLeft)-px(style.paddingRight));}
@@ -201,6 +206,7 @@
     // Paragraph margins omit the font's leading. Measure the first/last
     // printed lines, then give the button that same visible clearance.
     const gap=Math.max(0,before?previousBox.top-textBox(before).bottom:px(getComputedStyle(previous).marginBottom)+previousBox.top-box.top+box.bottom-previousBox.bottom);
+    if(document.body.dataset.page==='contacts')group.style.gap=gap+'px';
     group.style.setProperty('--gallery-action-before',Math.max(0,gap-(button.getBoundingClientRect().top-previousBox.bottom))+'px');
     const expanded=group.querySelector('details[open] > div');
     if(expanded){
@@ -246,7 +252,7 @@
         renderPhoto(index);
         const box=frames[index].getBoundingClientRect(),edge=edges(frames[index]),values=currentFrame(index);
         const photoHeight=Math.max(0,values.y)+box.height+Math.max(0,edge.marginTop)+Math.max(0,edge.marginBottom);
-        const row=Math.max(textHeight+(actionEnds[index]?0:blockGap),photoHeight+blockGap)+(index===slides.length-1?stroke:0);
+        const row=Math.max(textHeight+(actionEnds[index]?0:blockGap),photoHeight+(document.body.dataset.page==='contacts'&&index===slides.length-1?0:blockGap))+(index===slides.length-1?stroke:0);
         headerOffsets[index]=offset;rowHeights[index]=row;
         cards[index].style.setProperty('--gallery-header-offset',offset+'px');cards[index].style.setProperty('--gallery-body-offset',(offset+heights[index])+'px');cards[index].style.setProperty('--gallery-row-height',row+'px');
         // Prose always follows native document scroll, regardless of its length.
@@ -275,7 +281,7 @@
       const lastPhotoHeight=frames.at(-1).getBoundingClientRect().height;
       const lastPhotoBottom=Math.min(fixedRail(),innerHeight-lastPhotoHeight-24)+lastPhotoHeight;
       const exitTarget=Math.min(fixedRail()+(mode==='stack'?allHeaders:0)+24,lastPhotoBottom-48);
-      const exitSpace=(document.body.classList.contains('section-page')||photoMatrix)?0:Math.max(0,innerHeight-exitTarget-shellBottom);
+      const exitSpace=(document.body.classList.contains('section-page')&&document.body.dataset.page!=='contacts'||photoMatrix)?0:Math.max(0,innerHeight-exitTarget-shellBottom);
       layout.style.setProperty('--gallery-tail-space','0px');
       layout.style.setProperty('--gallery-exit-space',exitSpace+'px');
       setActive(active,false);paintLayering();paintClosingRule();
@@ -319,6 +325,7 @@
   $('#gallery-stack').addEventListener('keydown',event=>{if(!event.target.closest('.gallery-case-heading'))return;const next={'ArrowLeft':active-1,'ArrowUp':active-1,'ArrowRight':active+1,'ArrowDown':active+1,Home:0,End:slides.length-1}[event.key];if(next===undefined)return;event.preventDefault();goTo(Math.max(0,Math.min(slides.length-1,next)),true);});
   function nextPhoto(index,direction){if(slides[index].images.length<2)return;previews.delete(slides[index].id);photoIndex[index]=(photoIndex[index]+direction+slides[index].images.length)%slides[index].images.length;renderPhoto(index);setActive(index,false);queueLayout();}
   const dialog=$('#gallery-photo-dialog');
+  document.querySelectorAll('[data-contact-photo]').forEach(button=>button.addEventListener('click',()=>{const full=$('#gallery-photo-full');full.src=button.dataset.contactPhoto;full.alt=button.dataset.contactAlt;dialog.showModal();}));
   slides.forEach((slide,index)=>{
     panels[index].querySelector('.gallery-photo-prev').addEventListener('click',()=>nextPhoto(index,-1));
     panels[index].querySelector('.gallery-photo-next').addEventListener('click',()=>nextPhoto(index,1));

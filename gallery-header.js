@@ -57,7 +57,7 @@
     syncSectionHeader();document.fonts?.ready.then(queue);
   }
   const tilePath = tileOutline(Math.min(42, number("header:badgeSize",21.84) / number("header:tileSize",55.066667) * 78.666667));
-  const pages={home:"index.html",gallery:"gallery.html",painting:"painting.html",digital:"digital.html",glass:"glass.html",artist:"artist.html"};
+  const pages={home:"index.html",gallery:"gallery.html",painting:"painting.html",digital:"digital.html",glass:"glass.html",artist:"artist.html",contacts:"contacts.html"};
   window.GalleryNavigation={pages};
   const menuIds = ["home","gallery","painting","digital","glass","artist","contacts"];
   const sections = ["Главная", "Галерея", "Живопись", "Диджитал", "Стекло", "Художник", "Контакты"];
