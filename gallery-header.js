@@ -115,3 +115,75 @@
   document.fonts?.ready.then(fitNavigationHalves);
 
 })();
+
+/* Approved Gallery entrance: shared header; artwork wave on Home only. */
+(() => {
+  'use strict';
+  const root=document.documentElement, reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const gate=window.GalleryEntrance={quoteReady:false,afterReveal(callback){pendingQuote=callback;}};
+  const ease='cubic-bezier(.16,1,.3,1)';
+  let pendingQuote=null, shell=null, generation=0, headerAnimations=[], orbAnimations=[];
+  root.classList.add('gallery-enter-pending');
+  function releaseQuote(){gate.quoteReady=true;const callback=pendingQuote;pendingQuote=null;callback?.();}
+  function cancel(){for(const animation of [...headerAnimations,...orbAnimations])animation.cancel();headerAnimations=[];orbAnimations=[];}
+  function play(){
+    const run=++generation;cancel();
+    const header=document.querySelector('.matrix-header'),brand=header.querySelector('.brand-pill');
+    const matrix=document.querySelector('#work-matrix');
+    header.dataset.entrance=reduced.matches?'still':'entering';
+    if(reduced.matches){root.classList.remove('gallery-enter-pending');if(matrix)matrix.dataset.orbEntrance='still';releaseQuote();return;}
+    function animate(element,frames,duration,delay=0,curve=ease){
+      const animation=element.animate(frames,{duration,delay,easing:curve,fill:'both'});
+      headerAnimations.push(animation);return animation;
+    }
+    animate(header.querySelector('.brand-disc'),[
+      {transform:'scale(.015)',opacity:1,offset:0,easing:'cubic-bezier(.3,0,.35,1)'},
+      {transform:'scale(1.3)',opacity:1,offset:.65,easing:'ease-in-out'},
+      {transform:'scale(1)',opacity:1,offset:1}
+    ],800,0,'ease-in-out');
+    animate(shell,[{width:brand.offsetHeight+'px',opacity:0,offset:0},
+      {width:(brand.offsetHeight+(brand.clientWidth-brand.offsetHeight)*.08)+'px',opacity:1,offset:.12},
+      {width:brand.getBoundingClientRect().width+'px',opacity:1,offset:1}],440,456);
+    header.querySelectorAll('.section-tab').forEach((tab,index)=>animate(tab,[
+      {opacity:0,transform:'perspective(650px) rotateX(-86deg)'},
+      {opacity:1,transform:'perspective(650px) rotateX(0deg)'}
+    ],420,index*90));
+    const clock=animate(header.querySelector('.brand-quote'),[{visibility:'hidden'},{visibility:'hidden'}],956);
+    clock.finished.then(()=>{if(run!==generation)return;clock.cancel();releaseQuote();}).catch(()=>{});
+    Promise.all(headerAnimations.map(animation=>animation.finished.catch(()=>{}))).then(()=>{
+      if(run!==generation)return;
+      headerAnimations.forEach(animation=>animation.cancel());headerAnimations=[];header.dataset.entrance='complete';
+    });
+    if(matrix){
+      const orbs=[...matrix.querySelectorAll(':scope > .work-orb')];
+      const columns=Math.max(1,Math.round(matrix.clientWidth/(orbs[0]?.offsetWidth||1)));
+      matrix.dataset.orbEntrance='entering';
+      orbs.forEach((orb,index)=>orbAnimations.push(orb.animate([
+        {opacity:0,scale:'.86',translate:'0 8px'},
+        {opacity:1,scale:'1',translate:'0 0'}
+      ],{duration:580,delay:380+Math.floor(index/columns)*110+(index%columns)*36,easing:ease,fill:'both'})));
+      Promise.all(orbAnimations.map(animation=>animation.finished.catch(()=>{}))).then(()=>{
+        if(run!==generation)return;
+        orbAnimations.forEach(animation=>animation.cancel());orbAnimations=[];matrix.dataset.orbEntrance='complete';
+      });
+    }
+    root.classList.remove('gallery-enter-pending');
+  }
+  async function init(){
+    await document.fonts.ready;
+    if(document.querySelector('#work-matrix'))await window.GalleryArtwork.ready;
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    await Promise.all([...document.querySelectorAll('#work-matrix img')].map(image=>image.decode().catch(()=>{})));
+    const brand=document.querySelector('.brand-pill');
+    root.classList.remove('gallery-enter-pending');
+    const style=getComputedStyle(brand);
+    shell=document.createElement('span');shell.className='gallery-brand-shell';shell.setAttribute('aria-hidden','true');
+    shell.style.borderColor=style.borderTopColor;shell.style.borderWidth=style.borderTopWidth;shell.style.backgroundColor=style.backgroundColor;
+    brand.prepend(shell);brand.classList.add('gallery-brand-entrance');play();
+  }
+  document.addEventListener('DOMContentLoaded',()=>init().catch(error=>{
+    cancel();root.classList.remove('gallery-enter-pending');releaseQuote();console.error('Gallery entrance:',error);
+  }),{once:true});
+  addEventListener('pageshow',event=>{if(event.persisted&&shell){gate.quoteReady=false;play();}});
+  reduced.addEventListener('change',()=>{if(reduced.matches){++generation;cancel();root.classList.remove('gallery-enter-pending');releaseQuote();}});
+})();

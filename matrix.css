@@ -200,3 +200,21 @@
 
 :root { --content-button-height:43.2px; }
 .drawer-next { min-height:var(--content-button-height);padding-block:6px; }
+
+/* Approved shared header entrance and Home-only artwork wave. */
+/* Prototype-only motion layer; authored geometry and assets are unchanged. */
+.gallery-enter-pending .brand-pill {border-color:transparent!important;background:transparent!important}
+.gallery-enter-pending .brand-disc,.gallery-enter-pending .section-tab,.gallery-enter-pending .brand-quote {opacity:0}
+.gallery-enter-pending #work-matrix > .work-orb {opacity:0}
+.gallery-brand-entrance {position:relative;isolation:isolate;border-color:transparent!important;background:transparent!important}
+.gallery-brand-shell {position:absolute;left:-1px;top:-1px;height:calc(100% + 2px);width:calc(100% + 2px);box-sizing:border-box;border-style:solid;border-radius:inherit;pointer-events:none;z-index:-1}
+.brand-disc {transform-origin:center center}
+.section-tab {transform-origin:50% 0%;backface-visibility:hidden;transition:scale 90ms ease-out,translate 90ms ease-out}
+.section-tab .tab-outline path {transition:fill 120ms ease-out}
+.section-tab .tab-number {transition:background-color 120ms ease-out}
+@media(hover:hover) and (pointer:fine) {
+  .section-tab:not([aria-pressed="true"]):hover .tab-outline path {fill:#424448}
+  .section-tab:not([aria-pressed="true"]):hover .tab-number {background-color:#424448}
+}
+.section-tab[aria-pressed="true"]:enabled:active {scale:1;translate:0 0;filter:none}
+.section-tab:not([aria-pressed="true"]):enabled:active {scale:.97;translate:0 1px;filter:none}

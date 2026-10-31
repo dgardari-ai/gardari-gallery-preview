@@ -55,6 +55,46 @@
     return groups.map((group) => `<p>${group.map(story).join("<br>")}</p>`).join("");
   }
 
+  // Preview recommendation model: series, recurring themes and narrative vocabulary.
+  const themeRoots = [
+    ['сказ','бажов','хозяйк','мастер','камень','камен','ураль','малахит','цветок'],
+    ['дух','душ','мудр','свят','монах','суфи','волхв','бог','молит','вер'],
+    ['люб','женщ','женск','матер','матуш','дев','красот','маргарит'],
+    ['природ','лес','птиц','солн','свет','огн','земл','цвет','дерев'],
+    ['разум','мысл','созн','человек','цивилиз','эволюц','мир','времен'],
+    ['твор','искусств','худож','музык','танц','игр','театр','поэт','писат'],
+    ['пут','дорог','движ','свобод','выбор','судьб','жизн','смерт']
+  ];
+  const workText = w => [w.title,w.series,workNarrative(w)].join(' ').toLowerCase();
+  const words = w => new Set((workText(w).match(/[а-яёa-z]{5,}/g)||[]).map(x=>x.slice(0,6)));
+  function relatedWorks(w) {
+    const text=workText(w), own=words(w);
+    const themes=themeRoots.map(roots=>roots.some(root=>text.includes(root)));
+    return state.works.filter(other=>other.id!==w.id).map(other=>{
+      const ot=workText(other), ow=words(other);
+      const shared=[...own].filter(x=>ow.has(x)).length;
+      const themesScore=themeRoots.reduce((n,roots,i)=>n+(themes[i]&&roots.some(root=>ot.includes(root))?4:0),0);
+      const titleScore=other.title===w.title?100:0;
+      const seriesScore=w.series&&other.series===w.series?28:0;
+      return {other,score:titleScore+seriesScore+themesScore+12*shared/Math.max(1,Math.sqrt(own.size*ow.size))};
+    }).sort((a,b)=>b.score-a.score||a.other.id.localeCompare(b.other.id)).slice(0,2).map(x=>x.other);
+  }
+  function relatedMarkup(w) {
+    return `<section class="drawer-related" aria-label="Близкие работы"><span class="drawer-related-rule" aria-hidden="true"></span><div class="drawer-related-grid">${relatedWorks(w).map(other=>`<button type="button" class="work-card" data-related-work="${esc(other.id)}" aria-label="Открыть: ${esc(other.title)}"><span class="work-card-visual"><img loading="lazy" decoding="async" src="${safeHref(other.cover||(other.images||[]).find(isArtworkImage)?.url||'')}" alt="${esc(other.title)}"></span><span class="work-card-copy"><span class="work-card-title">${esc(other.title)}</span>${other.series?`<span class="work-card-label">${esc(other.series)}</span>`:''}</span></button>`).join('')}</div></section>`;
+  }
+
+  let purchaseDialog=null;
+  function ensurePurchaseDialog(){
+    if(purchaseDialog)return purchaseDialog;
+ const purchase=document.createElement('dialog');purchase.className='purchase-dialog';purchase.setAttribute('aria-label','Согласовать покупку работы');
+ purchase.innerHTML=`<button type="button" class="purchase-close" aria-label="Закрыть окно покупки">×</button><p class="purchase-message">Чтобы согласовать покупку этой работы, свяжитесь со мной в удобном вам мессенджере.</p><div class="purchase-contacts"><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В TELEGRAM</button><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В ВК МЕССЕНДЖЕРЕ</button><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В МАКС</button></div>`;
+ document.body.append(purchase);
+ purchase.querySelector('.purchase-close').onclick=()=>purchase.close();
+ purchase.addEventListener('click',event=>{if(event.target!==purchase)return;const r=purchase.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)purchase.close();});
+ purchaseDialog=purchase;return purchase;
+
+  }
+
   function openWork(id, options = {}) {
     if (Array.isArray(options.ids)) state.visible = options.ids.map(id => state.works.find(work => work.id === id)).filter(Boolean);
     const w = state.works.find((v) => v.id === id);
@@ -64,28 +104,33 @@
       ? state.visible : state.works.filter((v) => v.medium === w.medium);
     const index = currentList.findIndex((v) => v.id === id) + 1;
     $("#work-counter").textContent = String(index).padStart(2,"0") + "/" + String(currentList.length).padStart(2,"0");
+    const price=w.currentPrice ?? w.historicalPrice;
+    const saleState=options.saleState || w.saleStatus || (/не прода[её]тся/i.test(price||'') ? 'not-for-sale' : /продан/i.test(price||'') ? 'sold' : 'price');
+    const displayPrice=saleState==='sold'?(w.saleLabel||'ПРОДАНО'):saleState==='not-for-sale'?'НЕ ПРОДАЁТСЯ':price;
+    const canBuy=saleState==='price' && !!(price || w.sizePrices) && !/продан|не прода[её]тся/i.test(price||'');
+    const factText = value => String(value).replace(/(?<!\d)\.|\.(?!\d)/g, "");
     const fields = [
-      ["НАПРАВЛЕНИЕ", w.medium], ["СЕРИЯ", w.series], ["ГОД", w.year],
+      ["НАПРАВЛЕНИЕ", w.medium], ["СЕРИЯ", w.series], ["ГОД", w.year || "2020"],
       ["ТЕХНИКА", w.technique], ["РАЗМЕР", w.dimensions],
-      ["ТИРАЖ", w.edition], ["РАЗМЕР / ЦЕНА", w.sizePrices],
-      ["ЦЕНА", w.historicalPrice]
+      ["ТИРАЖ", w.edition], ["РАЗМЕР / ЦЕНА", saleState==='price' ? String(w.sizePrices||'').split(' | ').join('\n') : ''],
+      ["ЦЕНА", displayPrice]
     ].filter((entry) => entry[1]);
     const galleryImages = (w.images || []).filter(isArtworkImage);
     const coverUrl = w.cover || galleryImages[0]?.url || "";
     const additionalImages = galleryImages.filter((img) => img.url !== coverUrl);
     const description = workNarrative(w);
-    const recommendations = currentList.filter((item) => item.id !== w.id);
-    const otherWorks = recommendations.length ? recommendations : state.works.filter((item) => item.medium === w.medium && item.id !== w.id);
-    const next = otherWorks[Math.floor(Math.random() * otherWorks.length)];
     $("#drawer-content").innerHTML = `
       <img class="drawer-cover" src="${safeHref(coverUrl)}" alt="${esc(w.title)}"${imageDimensions(galleryImages.find(image=>image.url===coverUrl))}>
       <h2 class="drawer-title" id="work-title">${esc(w.title)}</h2>
       <div class="drawer-kicker">${esc(w.series || w.medium)}</div>
-      <div class="drawer-meta-wrap"><span class="work-facts-rule" id="work-facts-top" aria-hidden="true"></span><dl class="drawer-meta">${fields.map(([label, value])=>`<dt>${esc(label)}</dt><dd>${esc(value)}</dd>`).join("")}</dl><span class="work-facts-rule work-facts-rule--bottom" id="work-facts-bottom" aria-hidden="true"></span></div>
+      <div class="drawer-meta-wrap${canBuy ? " has-purchase" : ""}${w.sizePrices ? " has-size-prices" : ""}"><span class="work-facts-rule" id="work-facts-top" aria-hidden="true"></span><dl class="drawer-meta">${fields.map(([label, value])=>`<dt>${esc(label)}</dt><dd>${esc(factText(value))}</dd>`).join("")}</dl><div class="drawer-facts-footer"><span class="work-facts-rule work-facts-rule--bottom" id="work-facts-bottom" aria-hidden="true"></span>${canBuy?`<button type="button" class="gallery-action-button drawer-buy">КУПИТЬ ЭТУ РАБОТУ</button>`:""}</div></div>
       ${description ? `<div class="drawer-story">${narrativeMarkup(description)}</div>` : ""}
       ${additionalImages.length ? `<div class="drawer-gallery">${additionalImages.map((img)=>`<img loading="lazy" decoding="async" src="${safeHref(img.url)}" alt="${esc(w.title)} — дополнительное изображение"${imageDimensions(img)}>`).join("")}</div>` : ""}
-      ${next ? `<button class="drawer-next" type="button" data-next-work="${esc(next.id)}" aria-label="Открыть другую работу: ${esc(next.title)}"><span>ДРУГАЯ РАБОТА · ${esc(next.title)}</span><span aria-hidden="true">↗</span></button>` : ""}`;
-    $("#drawer-content [data-next-work]")?.addEventListener("click", () => openWork(next.id));
+      ${relatedMarkup(w)}`;
+    document.querySelectorAll('[data-related-work]').forEach(button=>button.addEventListener('click',()=>openWork(button.dataset.relatedWork)));
+    document.querySelector('.drawer-buy')?.addEventListener('click',()=>{
+      const popup=ensurePurchaseDialog();if(!popup.open)popup.showModal();
+    });
     const dialog = $("#work-dialog");
     if (!dialog.open) dialog.showModal();
     $("#drawer-content").scrollTop = Math.max(0, Number(options.scrollTop)||0);
@@ -111,13 +156,117 @@
     if(value.open)return openForEditor(value.workId,{scrollTop:value.scrollTop});
     pendingEditorOpen=null;if($("#work-dialog").open)$("#work-dialog").close();return true;
   }
+  // Current prices/statuses dictated by Denis on 2026-10-31.
+  // Keep historical donor data and author narratives unchanged.
+  const AUTHOR_CONFIRMED_OFFERS = {
+    "8v2kpnezb1": {
+      "status": "not-for-sale",
+      "label": "НЕ ПРОДАЁТСЯ"
+    },
+    "6xsrtcc4e1": {
+      "status": "not-for-sale",
+      "label": "НЕ ПРОДАЁТСЯ"
+    },
+    "2j7ccv69g1": {
+      "status": "not-for-sale",
+      "label": "НЕ ПРОДАЁТСЯ"
+    },
+    "v06tb8rn01": {
+      "status": "not-for-sale",
+      "label": "НЕ ПРОДАЁТСЯ"
+    },
+    "bpjs3c0vb1": {
+      "status": "not-for-sale",
+      "label": "НЕ ПРОДАЁТСЯ"
+    },
+    "j82gnrdcj1": {
+      "status": "price",
+      "price": "1 200 000 рублей"
+    },
+    "v7kehrcfx1": {
+      "status": "price",
+      "price": "1 200 000 рублей"
+    },
+    "bvgoitm0i1": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "dtijeim4i1": {
+      "status": "sold",
+      "label": "ПРОДАНА"
+    },
+    "04e74o3lc1": {
+      "status": "price",
+      "price": "1 200 000 рублей"
+    },
+    "yblsftiaz1": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "ndvkv44y71": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "0smycy7i41": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "x6nzcikfm1": {
+      "status": "price",
+      "price": "800 000 рублей"
+    },
+    "2e7yenidc1": {
+      "status": "price",
+      "price": "800 000 рублей"
+    },
+    "hs9lbp61h1": {
+      "status": "price",
+      "price": "800 000 рублей"
+    },
+    "ydpp232ud1": {
+      "status": "price",
+      "price": "800 000 рублей"
+    },
+    "mhdg7b4u11": {
+      "status": "price",
+      "price": "800 000 рублей"
+    },
+    "av64o84vs1": {
+      "status": "price",
+      "price": "1 000 000 рублей"
+    },
+    "9ln144o3g1": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "k0hxly5461": {
+      "status": "not-for-sale",
+      "label": "НЕ ПРОДАЁТСЯ"
+    },
+    "ra800122k1": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "culoz13ez1": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "7fmo5g4k61": {
+      "status": "price",
+      "price": "600 000 рублей"
+    },
+    "371ti0ens1": {
+      "status": "price",
+      "price": "600 000 рублей"
+    }
+  };
   const SERIES_NAMES={"БАЖОВСКИЕ СКАЗЫ":"СКАЗЫ БОЖОВА","СКАЗЫ БАЖОВА":"СКАЗЫ БОЖОВА","РУССКАЯ":"РУССКАЯ ДУША","БОЖОВСКИЕ СКАЗЫ":"СКАЗЫ БОЖОВА","СКАЗЫ БОЖОВА":"СКАЗЫ БОЖОВА","РУССКАЯ ДУША":"РУССКАЯ ДУША"};
   function canonicalSeries(series){return SERIES_NAMES[String(series||'').trim().toUpperCase()]||series;}
   function correctedMetadata(text){
     return String(text||'').replace(/\u0411[\u0410\u041e]\u0416\u041e\u0412\u0421\u041a\u0418\u0415 \u0421\u041a\u0410\u0417\u042b|\u0421\u041a\u0410\u0417\u042b \u0411[\u0410\u041e]\u0416\u041e\u0412\u0410/giu,name=>canonicalSeries(name))
       .replace(/(\u0441\u0435\u0440\u0438\u044f\s+)\u0420\u0423\u0421\u0421\u041a\u0410\u042f(?!\s+\u0414\u0423\u0428\u0410)/giu,(_,prefix)=>prefix+canonicalSeries('\u0420\u0423\u0421\u0421\u041a\u0410\u042f'));
   }
-  function canonicalWork(work){return {...work,series:canonicalSeries(work.series),short:correctedMetadata(work.short),fullText:String(work.fullText||'').split('\n').map((line,index)=>index===0?correctedMetadata(line):line).join('\n')};}
+  function canonicalWork(work){const offer=AUTHOR_CONFIRMED_OFFERS[work.id];return {...work,...(offer?{currentPrice:offer.price||'',saleStatus:offer.status,saleLabel:offer.label||'',offerConfirmedAt:'2026-10-31'}:{}),series:canonicalSeries(work.series),short:correctedMetadata(work.short),fullText:String(work.fullText||'').split('\n').map((line,index)=>index===0?correctedMetadata(line):line).join('\n')};}
   async function init() {
     ensureDialog();
     $("#drawer-content").addEventListener("scroll",()=>dispatchEvent(new CustomEvent("gallery:work-context",{detail:dialogContext()})),{passive:true});
@@ -131,6 +280,17 @@
     if(pendingEditorOpen){const request=pendingEditorOpen;pendingEditorOpen=null;openForEditor(request.id,request.options);}
     return {works:state.works,mediaMap};
   }
+  function snapFactRules(){
+   const dpr=window.devicePixelRatio||1;
+   document.querySelectorAll('.drawer-meta-wrap .work-facts-rule').forEach(rule=>{
+    rule.style.transform='none';const y=rule.getBoundingClientRect().top;
+    rule.style.transform=`translateY(${Math.round(y*dpr)/dpr-y}px)`;
+   });
+  }
+  if(typeof window!=='undefined')window.addEventListener('gallery:work-ready',()=>requestAnimationFrame(snapFactRules));
+  if(typeof window!=='undefined')window.addEventListener('resize',()=>requestAnimationFrame(snapFactRules));
+  if(typeof document!=='undefined')document.fonts.ready.then(()=>requestAnimationFrame(snapFactRules));
+  
   if(typeof module==='object'&&module.exports)module.exports={workNarrative,narrativeMarkup,isArtworkImage,canonicalSeries,canonicalWork};
   if(typeof document==='undefined')return;
   const ready=init();

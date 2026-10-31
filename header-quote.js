@@ -148,6 +148,11 @@
     if (key !== layoutKey) { buildRows(plan.rows, visible); layoutKey = key; }
   }
   function animate() {
+    if (window.GalleryEntrance && !window.GalleryEntrance.quoteReady) {
+      box.dataset.quoteState = 'waiting-menu';
+      window.GalleryEntrance.afterReveal(animate);
+      return;
+    }
     animationStart = null;
     if (motion.matches || number('quote:speed', 45) <= 0) { finish(); return; }
     box.dataset.quoteState = 'typing';
