@@ -492,3 +492,23 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 })();
 
 /* GARDARI_MOBILE_1_1_1: phone menu base matches the accepted responsive type. */
+
+/* GARDARI_MOBILE_1_1_2: cover the real iPhone safe area; keep keyboard focus. */
+(() => {
+  const root = document.documentElement;
+  const media = matchMedia('(max-width: 600px)');
+  const viewport = document.querySelector('meta[name="viewport"]');
+  const original = viewport?.getAttribute('content');
+  function syncViewport() {
+    if (!viewport) return;
+    viewport.setAttribute('content', media.matches ? original.replace(/,?\s*viewport-fit\s*=\s*[^,]+/g, '') + ', viewport-fit=cover' : original);
+  }
+  syncViewport();
+  media.addEventListener('change', syncViewport);
+  const pointer = () => { if (media.matches) root.dataset.phoneInput = 'pointer'; };
+  addEventListener('pointerdown', pointer, {capture:true, passive:true});
+  addEventListener('touchstart', pointer, {capture:true, passive:true});
+  addEventListener('keydown', event => {
+    if (media.matches && ['Tab','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(event.key)) root.dataset.phoneInput = 'keyboard';
+  }, true);
+})();

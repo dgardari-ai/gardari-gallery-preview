@@ -511,3 +511,34 @@
   }
   .phone-gallery-flow .phone-photo-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 }
+
+/* iPhone Safari safe-area and pointer focus corrections · 1.1.2. */
+@media (max-width: 600px) {
+  html, body { background-color: #fff; }
+  :root { --home-shell-top: calc(20px + env(safe-area-inset-top, 0px)) !important; }
+  body::before {
+    content: ''; position: fixed; top: 0; left: 0; right: 0;
+    height: env(safe-area-inset-top, 0px); background: #fff;
+    z-index: 99; pointer-events: none;
+  }
+  .is-section-page .matrix-header {
+    top: max(var(--section-menu-current-top), calc(20px + env(safe-area-inset-top, 0px))) !important;
+  }
+  .phone-gallery-flow .matrix-header::before {
+    top: -100vh !important;
+    background: #fff !important;
+  }
+  .work-dialog { padding-top: env(safe-area-inset-top, 0px); }
+  .work-dialog .drawer-scroll {
+    height: calc(100dvh - 64px - env(safe-area-inset-top, 0px));
+  }
+  .drawer-close, .purchase-close {
+    -webkit-appearance: none; appearance: none;
+    color: var(--ink) !important; background: var(--accent) !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html:not([data-phone-input="keyboard"]) :is(.drawer-close, .purchase-close):focus {
+    outline: none !important; box-shadow: none !important;
+    transform: none !important;
+  }
+}
