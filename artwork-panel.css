@@ -104,3 +104,6 @@
 
 /* r12: stronger purchase label in the artwork card. */
 .drawer-buy {font-weight:700;}
+
+/* Accepted purchase portrait · 2026-10-31. */
+.purchase-dialog{padding-top:0;padding-inline:0;} .purchase-portrait{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;object-position:35% center;margin:0 0 24px;border:0;border-radius:4px 4px 0 0;} .purchase-message,.purchase-contacts{margin-inline:28px;} .purchase-close{top:12px;right:12px;z-index:2;background:#D8C62A;border:1px solid #000;border-radius:50%;}
