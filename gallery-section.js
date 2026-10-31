@@ -218,6 +218,7 @@
     if(configuring)return;configuring=true;
     try{
       fitWidth();
+      layout.style.setProperty('--gallery-composition-width',layout.getBoundingClientRect().width+'px');
       const color=getComputedStyle(document.body).backgroundColor,channels=color.match(/[\d.]+/g)?.map(Number)||[255,255,255],alpha=channels.length>3?channels[3]:1;
       layout.style.setProperty('--gallery-page-background','rgb('+channels.slice(0,3).map(c=>Math.round(c*alpha+255*(1-alpha))).join(',')+')');
       layout.dataset.stackMode='measure';layout.style.setProperty('--gallery-tail-space','0px');

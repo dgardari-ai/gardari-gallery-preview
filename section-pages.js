@@ -51,14 +51,11 @@
   // Reuse the current Gallery's authored typography without rewriting its fields.
   const styles=window.GARDARI_GALLERY_SETTINGS?.styles || {};
   const heading=styles['gallery-title-space']?.all || {};
-  const paragraph=styles['gallery-text-space']?.all || {};
   const inherited={'font-family':'--section-heading-font','font-size':'--section-heading-size','font-weight':'--section-heading-weight','line-height':'--section-heading-line','letter-spacing':'--section-heading-tracking'};
   for(const [property,variable] of Object.entries(inherited)) if(heading[property]) document.body.style.setProperty(variable,heading[property]);
-  if(paragraph['line-height'])document.body.style.setProperty('--section-paragraph-line',paragraph['line-height']);
-  if(paragraph['font-size'])document.body.style.setProperty('--section-paragraph-size',paragraph['font-size']);
 
   const details=document.querySelector('#section-details');
-  details.innerHTML=(data.details || []).map((item,index)=>{
+  details.innerHTML=(data.details || []).filter(item=>!(page==='digital' && item.id==='digital-technology')).map((item,index)=>{
     const id=item.id || String(index),prefix=`page:${page}:detail:${id}:`;
     return `<details class="section-disclosure" data-detail="${esc(id)}"><summary>${esc(value(prefix+'title',item.title))}</summary><div>${item.heading?`<h3>${esc(value(prefix+'heading',item.heading))}</h3>`:''}${value(prefix+'paragraphs',item.paragraphs || []).map(text=>`<p>${esc(text)}</p>`).join('')}</div></details>`;
   }).join('');

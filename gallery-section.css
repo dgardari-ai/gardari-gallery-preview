@@ -16,7 +16,7 @@ html,body.gallery-page { overscroll-behavior-y:contain; }
 .gallery-case-header[data-title-empty="true"] { min-height:1px;height:1px;padding:0; }
 .gallery-case-header[data-title-empty="true"] h2 { height:0;overflow:hidden; }
 .gallery-case-body { position:relative;padding:var(--gallery-body-top) 0 0;border:0 solid transparent;background:var(--gallery-page-background); }
-.gallery-case-body p { margin:0 0 var(--gallery-paragraph-gap);border:0 solid var(--ink);font:400 19px/1.45 Arial,Helvetica,sans-serif;letter-spacing:-.01em;color:var(--body);overflow-wrap:break-word; }
+.gallery-case-body p { margin:0 0 var(--gallery-paragraph-gap);border:0 solid var(--ink);font:400 17px/21px Arial,Helvetica,sans-serif;letter-spacing:-.01em;color:var(--body);overflow-wrap:break-word; }
 .gallery-case-body p:last-child { margin-bottom:0; }
 .gallery-case:last-child .gallery-case-body { border-bottom-width:0; }
 .gallery-row-spacer { display:block;height:0;pointer-events:none; }
@@ -43,12 +43,12 @@ html,body.gallery-page { overscroll-behavior-y:contain; }
 .gallery-layout[data-stack-mode="stack"] .gallery-case-body { position:relative;z-index:calc(2 + var(--gallery-index)); }
 .gallery-layout:is([data-stack-mode="stack"],[data-stack-mode="flow"]) .gallery-media-panel { position:sticky;top:min(var(--section-current-content-top),calc(100svh - var(--gallery-media-height) - 24px)); }
 .gallery-layout[data-editing="true"] .gallery-photo { transition:none; }
-.gallery-photo-dialog { width:min(1147px,calc(100vw - 48px));height:min(900px,calc(100svh - 48px));max-height:none;max-width:none;margin:auto;padding:36px 12px 12px;border:1px solid var(--ink);border-radius:0;background:var(--paper);overflow:hidden; }
+.gallery-photo-dialog { width:max-content;height:max-content;max-width:calc(100vw - 48px);max-height:calc(100svh - 80px);margin:auto;padding:0;border:1px solid var(--ink);border-radius:0;background:transparent;overflow:visible;line-height:0; }
 .gallery-photo-dialog::backdrop { background:rgba(32,33,36,.72); }
-.gallery-photo-dialog img { width:100%;height:100%;object-fit:contain;border-radius:0; }
-.gallery-photo-close { position:absolute;top:5px;right:7px;font-size:20px; }
+.gallery-photo-dialog img { display:block;width:auto;height:auto;max-width:min(1145px,calc(100vw - 50px));max-height:min(898px,calc(100svh - 82px));object-fit:contain;border-radius:0; }
+.gallery-photo-close { position:absolute;top:12px;right:12px;padding:0;background:var(--accent);font:400 25px/1 var(--display); }
 @media(max-width:1024px) { .gallery-case-body { padding:var(--gallery-body-top) 0 0; } }
-@media(max-width:700px) { .gallery-text { padding-right:min(var(--section-column-gap,70px),12px,25%); }.gallery-case-header { min-height:0;gap:0;padding:var(--gallery-block-gap) 0; }.gallery-case h2 { font-size:clamp(23px,6vw,26px); }.gallery-case-body p { font-size:17px; }.gallery-photo-controls { left:7px;right:7px; }.gallery-photo-dialog { width:calc(100vw - 20px);height:calc(100svh - 24px); } }
+@media(max-width:700px) { .gallery-text { padding-right:min(var(--section-column-gap,70px),12px,25%); }.gallery-case-header { min-height:0;gap:0;padding:var(--gallery-block-gap) 0; }.gallery-case h2 { font-size:clamp(23px,6vw,26px); }.gallery-case-body p { font-size:17px; }.gallery-photo-controls { left:7px;right:7px; }.gallery-photo-dialog { max-width:calc(100vw - 20px); }.gallery-photo-dialog img { max-width:calc(100vw - 22px); } }
 @media(prefers-reduced-motion:reduce) { .gallery-photo,.gallery-small-button { transition:none; } }
 
 /* Real decorative rules keep the original one-pixel layout reservations. */
@@ -91,3 +91,9 @@ html,body.gallery-page { overscroll-behavior-y:contain; }
 .gallery-layout { --gallery-column-inset:var(--section-column-gap,70px); }
 .gallery-page .gallery-case-header > .gallery-rule { max-width:calc(100% + var(--gallery-column-inset)); }
 @media(max-width:700px) { .gallery-layout { --gallery-column-inset:min(var(--section-column-gap,70px),12px,25%); } }
+
+/* The opening rule spans the composition independently of the moving frame.
+   Its original left segment stays selectable and keeps its authored style. */
+.gallery-case:first-child > .gallery-case-header > .gallery-rule::after { content:"";position:absolute;left:100%;top:0;width:max(0px,calc(var(--gallery-composition-width) - 100%));height:100%;background:inherit;pointer-events:none; }
+
+

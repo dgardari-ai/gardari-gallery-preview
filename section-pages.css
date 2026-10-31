@@ -5,8 +5,8 @@
   --section-heading-weight:700;
   --section-heading-line:32px;
   --section-heading-tracking:-.05em;
-  --section-paragraph-size:19px;
-  --section-paragraph-line:23px;
+  --section-paragraph-size:17px;
+  --section-paragraph-line:21px;
   --work-card-radius:5px;
 }
 .section-page .gallery-rule { width:calc(100% + var(--section-column-gap,70px));background:var(--ink); }
@@ -69,11 +69,11 @@
 @media(max-width:700px) { .section-page .gallery-rule { width:calc(100% + min(var(--section-column-gap,70px),12px,25%)); }.section-page .gallery-case-body p { font-size:17px; } }
 
 /* Explanatory text first; three numbered choices below it. */
-.section-page .gallery-case-body p.gallery-format-note { display:block;padding:var(--work-facts-padding) 0;border-top:1px solid var(--soft);border-bottom:1px solid var(--soft);font:var(--work-facts-font);letter-spacing:0;color:var(--body);white-space:normal; }
+.section-page .gallery-case-body p.gallery-format-note { display:block;padding:calc(var(--work-facts-padding) * .75) 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);font:var(--work-facts-font);letter-spacing:0;color:var(--ink);white-space:normal; }
 .gallery-format-label { display:block; }
-.gallery-format-values { display:grid;gap:var(--work-facts-row-gap);margin-top:var(--work-facts-row-gap);font:inherit;color:var(--ink);counter-reset:format-choice; }
+.gallery-format-values { display:grid;gap:calc(var(--work-facts-row-gap) * .5);margin-top:calc(var(--work-facts-row-gap) * .75);font:inherit;color:var(--ink);counter-reset:format-choice; }
 .gallery-format-choice { display:grid;grid-template-columns:1.5em minmax(0,1fr);column-gap:.5em;align-items:baseline;counter-increment:format-choice; }
-.gallery-format-choice::before { content:counter(format-choice)'.';font:inherit;color:var(--body); }
+.gallery-format-choice::before { content:counter(format-choice)'.';font:inherit;color:var(--ink); }
 .gallery-format-bullet { display:none; }
 .artist-work-gallery { padding-top:0; }
 .artist-orb-matrix { aspect-ratio:5 / 2;--matrix-columns:5;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:auto;min-height:0; }
