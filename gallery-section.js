@@ -165,6 +165,50 @@
   }
   function fitWidth(){const diameter=number('matrix:circleSize',107.1225),rows=number('matrix:rows',5);const columns=Math.max(1,Math.min(Math.floor(($('.matrix-frame').getBoundingClientRect().width+.01)/diameter),Math.floor(60/rows)));$('#matrix-pack').style.setProperty('--matrix-columns',String(columns));window.GalleryHeaderMotion?.update();window.GalleryHeaderQuote?.refit();}
   function outerHeight(node){const style=getComputedStyle(node);return node.getBoundingClientRect().height+px(style.marginTop)+px(style.marginBottom);}
+  const textMeasure=document.createElement('canvas').getContext('2d');
+  function textBox(node){
+    const range=document.createRange();range.selectNodeContents(node);
+    const rects=Array.from(range.getClientRects()).filter(rect=>rect.width>0&&rect.height>0);
+    if(!rects.length)return node.getBoundingClientRect();
+    const first=rects.reduce((a,b)=>a.top<b.top?a:b),last=rects.reduce((a,b)=>a.top>b.top?a:b);
+    if(!textMeasure)return {top:first.top,bottom:last.bottom};
+    const leading=[],trailing=[],walker=document.createTreeWalker(node,NodeFilter.SHOW_TEXT);
+    let text;
+    while((text=walker.nextNode()))for(const word of text.textContent.matchAll(/\S+/g)){
+      range.setStart(text,word.index);range.setEnd(text,word.index+word[0].length);
+      const lines=Array.from(range.getClientRects());
+      const starts=lines.some(rect=>Math.abs(rect.top-first.top)<.5),ends=lines.some(rect=>Math.abs(rect.top-last.top)<.5);
+      if(lines.length>1&&(starts||ends)){
+        let head='',tail='';
+        for(let i=0;i<word[0].length;i++){range.setStart(text,word.index+i);range.setEnd(text,word.index+i+1);const part=range.getBoundingClientRect();if(Math.abs(part.top-first.top)<.5)head+=word[0][i];if(Math.abs(part.top-last.top)<.5)tail+=word[0][i];}
+        if(head)leading.push(head);if(tail)trailing.push(tail);
+      }else{if(starts)leading.push(word[0]);if(ends)trailing.push(word[0]);}
+    }
+    const style=getComputedStyle(node);textMeasure.font=`${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const start=textMeasure.measureText(leading.join(' ')),end=textMeasure.measureText(trailing.join(' '));
+    if(!Number.isFinite(start.fontBoundingBoxDescent)||!Number.isFinite(end.fontBoundingBoxDescent))return {top:first.top,bottom:last.bottom};
+    return {top:first.bottom-start.fontBoundingBoxDescent-start.actualBoundingBoxAscent,bottom:last.bottom-end.fontBoundingBoxDescent+end.actualBoundingBoxDescent};
+  }
+  function actionRhythm(body){
+    const group=body.querySelector(':scope > .section-details--inline,:scope > .gallery-block-actions');
+    if(!group)return false;
+    group.style.setProperty('--gallery-action-before','0px');group.style.setProperty('--gallery-action-after','0px');
+    group.style.setProperty('--gallery-action-follow-adjust','0px');
+    const paragraphs=Array.from(body.children).filter(node=>node.matches('p')&&node.textContent.trim()&&node.getBoundingClientRect().height>0&&getComputedStyle(node).display!=='none');
+    const previous=paragraphs.at(-1),before=paragraphs.at(-2),button=group.querySelector('summary,.gallery-action-button');
+    if(!previous||!button)return false;
+    const previousBox=textBox(previous),box=previous.getBoundingClientRect();
+    // Paragraph margins omit the font's leading. Measure the first/last
+    // printed lines, then give the button that same visible clearance.
+    const gap=Math.max(0,before?previousBox.top-textBox(before).bottom:px(getComputedStyle(previous).marginBottom)+previousBox.top-box.top+box.bottom-previousBox.bottom);
+    group.style.setProperty('--gallery-action-before',Math.max(0,gap-(button.getBoundingClientRect().top-previousBox.bottom))+'px');
+    const expanded=group.querySelector('details[open] > div');
+    if(expanded){
+      const next=Array.from(expanded.children).find(node=>node.textContent.trim()&&node.getBoundingClientRect().height>0&&getComputedStyle(node).display!=='none');
+      if(next){const padding=px(getComputedStyle(expanded).paddingTop);group.style.setProperty('--gallery-action-follow-adjust',Math.max(-padding,gap-(textBox(next).top-button.getBoundingClientRect().bottom))+'px');}
+    }else group.style.setProperty('--gallery-action-after',gap+'px');
+    return !expanded;
+  }
   function naturalCardHeight(index){
     const body=bodies[index],box=body.getBoundingClientRect();
     const contentBottom=Math.max(box.bottom,...Array.from(body.querySelectorAll('p')).filter(node=>!node.closest('details:not([open])')&&node.getBoundingClientRect().height>0).map(node=>node.getBoundingClientRect().bottom+px(getComputedStyle(node).marginBottom)));
@@ -188,8 +232,8 @@
         button.dataset.baseWidth=String(natural);
         button.style.width=Math.min(natural*1.2,bodies[0].clientWidth)+'px';
       });
+      const actionEnds=bodies.map(actionRhythm);
       const blockGap=px(getComputedStyle(layout).getPropertyValue('--gallery-block-gap'));
-      const paragraphGap=px(getComputedStyle(layout).getPropertyValue('--gallery-paragraph-gap'));
       const stroke=px(getComputedStyle(layout).getPropertyValue('--gallery-stroke'));
       headers.forEach(header=>{const title=header.querySelector('h2');title.tabIndex=title.scrollWidth>title.clientWidth+1?0:-1;});
       let offset=0;
@@ -201,9 +245,7 @@
         renderPhoto(index);
         const box=frames[index].getBoundingClientRect(),edge=edges(frames[index]),values=currentFrame(index);
         const photoHeight=Math.max(0,values.y)+box.height+Math.max(0,edge.marginTop)+Math.max(0,edge.marginBottom);
-        const endsWithButton=inlineDetails&&bodies[index].contains(inlineDetails)||bodies[index].querySelector('.gallery-block-actions');
-        const rowGap=endsWithButton&&textHeight>=photoHeight?paragraphGap:blockGap;
-        const row=Math.max(textHeight,photoHeight)+rowGap+(index===slides.length-1?stroke:0);
+        const row=Math.max(textHeight+(actionEnds[index]?0:blockGap),photoHeight+blockGap)+(index===slides.length-1?stroke:0);
         headerOffsets[index]=offset;rowHeights[index]=row;
         cards[index].style.setProperty('--gallery-header-offset',offset+'px');cards[index].style.setProperty('--gallery-body-offset',(offset+heights[index])+'px');cards[index].style.setProperty('--gallery-row-height',row+'px');
         // Prose always follows native document scroll, regardless of its length.

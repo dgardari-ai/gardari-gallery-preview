@@ -78,7 +78,7 @@ html,body.gallery-page { overscroll-behavior-y:contain; }
 .gallery-media-panel::after { content:"";position:absolute;left:0;top:100%;width:100%;height:100vh;background:var(--gallery-page-background);pointer-events:none; }
 .gallery-photo-controls .gallery-small-button svg { stroke-width:1.8; }
 
-.gallery-block-actions { margin:0; }
+.gallery-block-actions { display:flex;flex-direction:column;align-items:flex-start;margin:0;padding-block:var(--gallery-action-before,0px) var(--gallery-action-after,0px); }
 .gallery-action-button { display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-height:var(--content-button-height,43.2px);padding:6px clamp(16px,1.7vw,24px);border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--paper);font:400 clamp(10px,.9vw,12px)/1.3 var(--mono);letter-spacing:-.01em;text-align:center;text-decoration:none; }
 .gallery-action-button:is(:hover,:focus-visible) { background:#35373a; }
 
