@@ -71,7 +71,7 @@
 /* Explanatory text first; three numbered choices below it. */
 .section-page .gallery-case-body p.gallery-format-note { display:block;padding:calc(var(--work-facts-padding) * .75) 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);font:var(--work-facts-font);letter-spacing:0;color:var(--ink);white-space:normal; }
 .gallery-format-label { display:block; }
-.gallery-format-values { display:grid;gap:calc(var(--work-facts-row-gap) * .5);margin-top:calc(var(--work-facts-row-gap) * .75);font:inherit;color:var(--ink);counter-reset:format-choice; }
+.gallery-format-values { display:grid;gap:calc(var(--work-facts-row-gap) / 3);margin-top:calc(var(--work-facts-row-gap) * .75);font:inherit;color:var(--ink);counter-reset:format-choice; }
 .gallery-format-choice { display:grid;grid-template-columns:1.5em minmax(0,1fr);column-gap:.5em;align-items:baseline;counter-increment:format-choice; }
 .gallery-format-choice::before { content:counter(format-choice)'.';font:inherit;color:var(--ink); }
 .gallery-format-bullet { display:none; }
