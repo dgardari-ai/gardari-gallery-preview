@@ -187,3 +187,306 @@
   addEventListener('pageshow',event=>{if(event.persisted&&shell){gate.quoteReady=false;play();}});
   reduced.addEventListener('change',()=>{if(reduced.matches){++generation;cancel();root.classList.remove('gallery-enter-pending');releaseQuote();}});
 })();
+
+/* GARDARI_MOBILE_1_1_0 */
+(() => {
+function installPhoneLayout() {
+/* Review-only geometry; the installed Gallery and its authored settings stay intact. */
+(() => {
+  'use strict';
+  const pack = document.querySelector('#matrix-pack');
+  if (!pack) return;
+  const root = document.documentElement;
+  let lastSize = null;
+  function sync() {
+    const gap = parseFloat(getComputedStyle(root).getPropertyValue('--phone-menu-gap')) || 0;
+    const size = (pack.getBoundingClientRect().width - 3 * gap) / 4;
+    if (size <= 0 || size === lastSize) return;
+    lastSize = size;
+    root.style.setProperty('--phone-menu-tile', size + 'px');
+    window.GalleryHeaderMotion?.update();
+  }
+  new ResizeObserver(sync).observe(pack);
+  sync();
+})();
+
+/* Text actions, menu labels and purchase actions: phone-only type scaling. */
+(() => {
+  const media = matchMedia('(max-width: 600px)');
+  const selector = '.gallery-action-button,.drawer-buy,.drawer-next,.section-disclosure summary,.filter-btn,.tab-name,.tab-number';
+  const originals = new Map();
+  function update() {
+    if (!media.matches) {
+      for (const [node, base] of originals) {
+        for (const [property, value, priority] of base.inline) {
+          if (value) node.style.setProperty(property, value, priority);
+          else node.style.removeProperty(property);
+        }
+      }
+      originals.clear(); return;
+    }
+    for (const node of document.querySelectorAll(selector)) {
+      if (originals.has(node)) continue;
+      const size = parseFloat(getComputedStyle(node).fontSize);
+      originals.set(node, {inline: ['font-size','font-weight'].map(property => [property,node.style.getPropertyValue(property),node.style.getPropertyPriority(property)])});
+      node.style.setProperty('font-size', size * 1.15 + 'px', 'important');
+      node.style.setProperty('font-weight', '700', 'important');
+      node.dataset.phoneButtonBaseSize = String(size);
+    }
+  }
+  new MutationObserver(update).observe(document.body, {childList: true, subtree: true});
+  media.addEventListener('change', update);
+  update();
+})();
+
+/* Move the existing photo nodes, retaining their sources, crops and handlers.
+   Above the phone breakpoint the original DOM is restored in place. */
+(() => {
+function installPhoneContent() {
+  'use strict';
+  if (document.body.dataset.page === 'home' || !document.querySelector('#gallery-layout')) return;
+  const media = matchMedia('(max-width: 600px)');
+  const weight = '3';
+  const strokes = {'0': 0, '1': .3, '2': .65, '3': 1};
+  const stroke = strokes[weight] || 0;
+  document.documentElement.style.setProperty('--phone-title-stroke', stroke + 'px');
+  const layout = document.querySelector('#gallery-layout');
+  const firstCard = layout.querySelector('.gallery-case');
+  if (!firstCard || firstCard.dataset.phoneLayoutBound === 'true') return;
+  layout.phoneLayoutCleanup?.();
+  firstCard.dataset.phoneLayoutBound = 'true';
+  const pairs = [...layout.querySelectorAll('.gallery-case')].map(card => {
+    const id = card.dataset.gallerySection;
+    const panel = layout.querySelector(`[data-gallery-panel="${id}"]`);
+    const frame = panel.querySelector('[data-gallery-frame]');
+    const marker = document.createComment('Original photo position: ' + id);
+    panel.before(marker);
+    const heading = card.querySelector('.gallery-case-heading > span');
+    return {card, panel, frame, marker, heading, originalRows: [...heading.childNodes]};
+  });
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d', {willReadFrequently: true});
+  let typographyFrame = 0;
+  const titleBases = new WeakMap();
+  function fontOf(style) {
+    return `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  }
+  function lineInk(line) {
+    const style = getComputedStyle(line);
+    context.font = fontOf(style);
+    const text = style.textTransform === 'uppercase' ? line.textContent.toLocaleUpperCase('ru-RU') : line.textContent;
+    const metrics = context.measureText(text.trim());
+    let baseline = line.querySelector('[data-phone-baseline]');
+    if (!baseline) {
+      baseline = document.createElement('span');
+      baseline.dataset.phoneBaseline = '';
+      baseline.setAttribute('aria-hidden', 'true');
+      baseline.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline;margin:0;padding:0;border:0';
+      line.append(baseline);
+    }
+    line.dataset.phoneInkAscent = String(metrics.actualBoundingBoxAscent);
+    line.dataset.phoneInkDescent = String(metrics.actualBoundingBoxDescent);
+    const y = baseline.getBoundingClientRect().top;
+    return {top: y - metrics.actualBoundingBoxAscent, bottom: y + metrics.actualBoundingBoxDescent};
+  }
+  function measureTypography() {
+    typographyFrame = 0;
+    if (!enabled || !context) return;
+    pairs.forEach(({card}) => {
+      const header = card.querySelector('.gallery-case-header');
+      const title = header.querySelector('h2');
+      const lines = [...header.querySelectorAll('.gallery-heading-line')].filter(n => n.textContent.trim());
+      if (!header.dataset.phoneRowsFitted && lines.length) {
+        const style = getComputedStyle(lines[0]);
+        context.font = `${style.fontStyle} ${style.fontWeight} ${parseFloat(style.fontSize) * 1.1}px ${style.fontFamily}`;
+        const tracking = (parseFloat(style.letterSpacing) || 0) * 1.1;
+        const limit = title.clientWidth - 15;
+        const rows = [];
+        for (const line of lines) {
+          let row = '';
+          for (const word of line.textContent.trim().split(/\s+/)) {
+            const next = row ? row + ' ' + word : word;
+            const width = context.measureText(next.toLocaleUpperCase('ru-RU')).width + (next.length - 1) * tracking;
+            if (row && width > limit) { rows.push(row + ' '); row = word; }
+            else row = next;
+          }
+          if (row) rows.push(row + (/\s$/.test(line.textContent) ? ' ' : ''));
+        }
+        if (rows.length > lines.length) {
+          const parent = lines[0].parentElement;
+          parent.replaceChildren(...rows.map(text => {const span=document.createElement('span');span.className='gallery-heading-line';span.textContent=text;return span;}));
+          header.dataset.phoneRowsFitted = 'true';
+          queueTypography();
+          return;
+        }
+        header.dataset.phoneRowsFitted = 'true';
+      }
+      let base = titleBases.get(title);
+      if (!base) {
+        if (!lines.length) return;
+        const first = lineInk(lines[0]), second = lines[1] ? lineInk(lines[1]) : null;
+        const style = getComputedStyle(lines[0]);
+        context.font = fontOf(style);
+        base = {size: parseFloat(style.fontSize), gap: second ? second.top - first.bottom : Math.max(0, parseFloat(style.lineHeight) - (first.bottom - first.top)),
+          fillGap: (context.measureText('Н').width + (parseFloat(style.letterSpacing) || 0)) / 2,
+          fontValue: title.style.getPropertyValue('font-size'), fontPriority: title.style.getPropertyPriority('font-size'),
+          lineValue: title.style.getPropertyValue('line-height'), linePriority: title.style.getPropertyPriority('line-height')};
+        titleBases.set(title, base);
+      }
+      title.style.setProperty('font-size', (base.size * 1.1) + 'px', 'important');
+      context.font = fontOf(getComputedStyle(lines[0]));
+      const firstMetrics = context.measureText(lines[0].textContent.trim().toLocaleUpperCase('ru-RU'));
+      const secondMetrics = context.measureText((lines[1] || lines[0]).textContent.trim().toLocaleUpperCase('ru-RU'));
+      title.style.setProperty('line-height', (base.gap + firstMetrics.actualBoundingBoxDescent + secondMetrics.actualBoundingBoxAscent + stroke) + 'px', 'important');
+      header.dataset.phoneBaseSize = String(base.size);
+      header.dataset.phoneBaseLineGap = String(base.gap);
+      lines.forEach(line => {
+        lineInk(line);
+        const style = getComputedStyle(line);
+        context.font = fontOf(style);
+        const letter = context.measureText('Н');
+        const gap = base.fillGap;
+        const node = [...line.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+        if (!node) return;
+        const range = document.createRange();
+        range.setStart(node, 0);
+        range.setEnd(node, node.textContent.trimEnd().length);
+        const text = range.getBoundingClientRect(), row = line.getBoundingClientRect();
+        const baseline = line.querySelector('[data-phone-baseline]').getBoundingClientRect().top;
+        line.style.setProperty('--phone-fill-left', (text.right - row.left + gap + stroke / 2) + 'px');
+        line.style.setProperty('--phone-fill-top', (baseline - letter.actualBoundingBoxAscent - row.top - stroke / 2) + 'px');
+        line.style.setProperty('--phone-fill-height', (letter.actualBoundingBoxAscent + letter.actualBoundingBoxDescent + stroke) + 'px');
+        line.dataset.phoneFillGap = String(gap);
+      });
+      header.dataset.phoneWeight = weight;
+    });
+  }
+  function queueTypography() {
+    if (!typographyFrame) typographyFrame = requestAnimationFrame(measureTypography);
+  }
+  const rails = [];
+  function installRails() {
+    if (rails.length) return;
+    pairs.forEach(({panel, frame, card}) => {
+      const originals = [...frame.querySelectorAll('.gallery-photo')];
+      if (originals.length < 2) return;
+      const rail = document.createElement('div');
+      rail.className = 'phone-photo-rail';
+      rail.setAttribute('aria-label', panel.getAttribute('aria-label'));
+      originals.forEach(source => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'phone-photo-card';
+        button.setAttribute('aria-label', 'Увеличить фотографию · ' + source.alt);
+        const img = source.cloneNode();
+        img.removeAttribute('aria-hidden');
+        img.removeAttribute('id');
+        img.removeAttribute('style');
+        img.className = 'phone-rail-image';
+        button.append(img);
+        button.addEventListener('click', () => {
+          const full = document.querySelector('#gallery-photo-full');
+          full.src = source.src; full.alt = source.alt;
+          document.querySelector('#gallery-photo-dialog').showModal();
+        });
+        rail.append(button);
+      });
+      rail.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        rail.scrollBy({left: (event.key === 'ArrowRight' ? 1 : -1) * rail.firstElementChild.offsetWidth, behavior: 'smooth'});
+      });
+      frame.before(rail);
+      panel.classList.add('has-phone-rail');
+      rails.push(rail);
+    });
+  }
+  let enabled = false;
+  function sync() {
+    if (media.matches === enabled) return;
+    enabled = media.matches;
+    if (enabled) {
+      pairs.forEach(({card, panel, frame, heading}) => {
+        if (document.body.dataset.page === 'contacts' && heading.querySelectorAll('.gallery-heading-line').length === 1) {
+          const text = heading.textContent, spaces = [...text.matchAll(/\s+/g)];
+          if (spaces.length) {
+            const split = spaces.reduce((best, match) => Math.abs(match.index - text.length / 2) < Math.abs(best.index - text.length / 2) ? match : best);
+            const first = document.createElement('span'), second = document.createElement('span');
+            first.className = second.className = 'gallery-heading-line';
+            first.textContent = text.slice(0, split.index + split[0].length);
+            second.textContent = text.slice(split.index + split[0].length);
+            heading.replaceChildren(first, second);
+          }
+        }
+        const rect = frame.getBoundingClientRect();
+        const ratio = Number(frame.dataset.frameRatio) || rect.width / Math.max(1, rect.height) || 1;
+        frame.style.setProperty('--phone-photo-ratio', String(ratio));
+        if (card.dataset.gallerySection === 'artist-2') {
+          const photo = frame.querySelector('.gallery-photo');
+          const naturalFrame = () => {
+            if (photo?.naturalWidth && photo.naturalHeight) frame.style.setProperty('--phone-photo-ratio', String(photo.naturalWidth / photo.naturalHeight));
+          };
+          photo?.addEventListener('load', naturalFrame);
+          naturalFrame();
+        }
+        card.querySelector('.gallery-case-body').before(panel);
+      });
+      document.body.classList.add('phone-gallery-flow');
+      installRails();
+      queueTypography();
+    } else {
+      document.body.classList.remove('phone-gallery-flow');
+      pairs.forEach(({panel, frame, marker, heading, originalRows}) => {
+        if (document.body.dataset.page === 'contacts') heading.replaceChildren(...originalRows);
+        marker.after(panel);
+        frame.style.removeProperty('--phone-photo-ratio');
+      });
+      pairs.forEach(({card}) => {
+        const title = card.querySelector('h2'), base = titleBases.get(title);
+        if (!base) return;
+        for (const [property, value, priority] of [['font-size', base.fontValue, base.fontPriority], ['line-height', base.lineValue, base.linePriority]]) {
+          if (value) title.style.setProperty(property, value, priority);
+          else title.style.removeProperty(property);
+        }
+        titleBases.delete(title);
+      });
+    }
+    window.GalleryHeaderMotion?.update();
+  }
+  media.addEventListener('change', sync);
+  const titleObserver = new ResizeObserver(queueTypography);
+  pairs.forEach(({card}) => titleObserver.observe(card.querySelector('h2')));
+  document.fonts?.ready.then(queueTypography);
+  let contactObserver = null;
+  if (document.body.dataset.page === 'contacts') {
+    const groups = [...document.querySelectorAll('.gallery-block-actions')];
+    const updateGaps = () => {
+      if (!media.matches) return;
+      groups.forEach(group => {
+        const gap = (parseFloat(group.style.gap) || 11) * 2 / 3;
+        const value = gap + 'px';
+        if (group.style.getPropertyValue('--phone-contact-gap') !== value) group.style.setProperty('--phone-contact-gap', value);
+      });
+    };
+    const observer = new MutationObserver(updateGaps);
+    contactObserver = observer;
+    groups.forEach(group => observer.observe(group, {attributes: true, attributeFilter: ['style']}));
+    media.addEventListener('change', updateGaps);
+    updateGaps();
+  }
+  layout.phoneLayoutCleanup = () => {
+    enabled = false;
+    titleObserver.disconnect();
+    contactObserver?.disconnect();
+    media.removeEventListener('change', sync);
+    cancelAnimationFrame(typographyFrame);
+  };
+  sync();
+}
+installPhoneContent();
+addEventListener('gallery:ready', () => requestAnimationFrame(installPhoneContent));
+})();
+
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installPhoneLayout, {once:true}); else installPhoneLayout();
+})();
