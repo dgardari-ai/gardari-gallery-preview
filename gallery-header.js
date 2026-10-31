@@ -227,7 +227,7 @@ function installPhoneLayout() {
     }
     for (const node of document.querySelectorAll(selector)) {
       if (originals.has(node)) continue;
-      const size = parseFloat(getComputedStyle(node).fontSize);
+      const size = node.matches('.tab-name,.tab-number') ? Math.min(11, Math.max(9, innerWidth * .028)) : parseFloat(getComputedStyle(node).fontSize);
       originals.set(node, {inline: ['font-size','font-weight'].map(property => [property,node.style.getPropertyValue(property),node.style.getPropertyPriority(property)])});
       node.style.setProperty('font-size', size * 1.15 + 'px', 'important');
       node.style.setProperty('font-weight', '700', 'important');
@@ -490,3 +490,5 @@ addEventListener('gallery:ready', () => requestAnimationFrame(installPhoneConten
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installPhoneLayout, {once:true}); else installPhoneLayout();
 })();
+
+/* GARDARI_MOBILE_1_1_1: phone menu base matches the accepted responsive type. */
