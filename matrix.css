@@ -542,3 +542,400 @@
     transform: none !important;
   }
 }
+
+/* GARDARI_TABLET_1_2_0: accepted portrait study only. */
+@media (min-width: 601px) and (max-width: 1100px) and (orientation: portrait) {
+
+:root.gallery-tablet-portrait {
+    --phone-menu-gap: 7.8px;
+    --phone-menu-tile: 74.4918px;
+    --phone-menu-height: calc(2 * var(--phone-menu-tile) + var(--phone-menu-gap));
+    --home-shell-top: 20px !important;
+    --matrix-top-offset: calc(var(--phone-menu-height) + 24px) !important;
+    --header-gap: 24px !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, var(--phone-menu-tile)) !important;
+    gap: var(--phone-menu-gap) !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: var(--phone-menu-height) !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    align-items: stretch !important;
+  }
+
+html.gallery-tablet-portrait .is-section-page .matrix-header {
+    width: var(--section-menu-width) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header > .brand-pill {
+    display: grid !important;
+    place-items: center !important;
+    width: var(--phone-menu-tile) !important;
+    height: var(--phone-menu-tile) !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    gap: 0 !important;
+    background: transparent !important;
+    border-radius: 50% !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header .brand-disc {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header .brand-quote,
+html.gallery-tablet-portrait .matrix-header .gallery-brand-shell,
+html.gallery-tablet-portrait .matrix-header > .gallery-nav-controls {
+    display: none !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header > .section-tabs,
+html.gallery-tablet-portrait .matrix-header .tab-strip {
+    display: contents !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header .section-tab {
+    width: 100% !important;
+    height: var(--phone-menu-tile) !important;
+    min-width: 0 !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header .tab-number {
+    width: calc(var(--phone-menu-tile) * .36056) !important;
+    height: calc(var(--phone-menu-tile) * .36056) !important;
+    font-size: clamp(9px, 2.8vw, 11px) !important;
+    letter-spacing: -.07em !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header .tab-name {
+    left: 2px !important;
+    right: 2px !important;
+    bottom: calc(var(--phone-menu-tile) * .13) !important;
+    font-size: clamp(9px, 2.8vw, 11px) !important;
+    font-weight: 600 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -.045em !important;
+    white-space: nowrap !important;
+  }
+
+
+html.gallery-tablet-portrait .phone-gallery-flow [data-gallery-frame="glass-1"] { border-top-width: 0 !important; }
+
+html.gallery-tablet-portrait .phone-gallery-flow [data-gallery-frame="artist-2"] .gallery-photo {
+    width: 100% !important; height: 100% !important;
+    left: 0 !important; top: 0 !important;
+    transform: none !important; object-fit: contain !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow.contacts-page .gallery-block-actions {
+    gap: var(--phone-contact-gap, 14.67px) !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow .matrix-header::before {
+    left: calc((100% - 100vw) / 2) !important;
+    right: auto !important;
+    width: 100vw !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case-header::before {
+    display: none !important;
+  }
+
+html.gallery-tablet-portrait body.phone-gallery-flow #gallery-layout {
+    display: block !important;
+    min-width: 0 !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-text {
+    width: 100% !important;
+    padding-right: 0 !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case {
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding-bottom: 0;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case-header {
+    position: relative !important;
+    top: auto !important;
+    width: 100% !important;
+    z-index: 20 !important;
+    border-top-width: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 21px !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case-header > .gallery-rule {
+    display: none !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case h2 {
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    padding-left: 0 !important;
+    -webkit-text-stroke: var(--phone-title-stroke, 0px) currentColor;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-heading-line {
+    position: relative;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-heading-line::after {
+    content: '';
+    position: absolute;
+    left: var(--phone-fill-left, 100%);
+    right: 0;
+    top: var(--phone-fill-top, 0px);
+    height: var(--phone-fill-height, 0px);
+    background: #D8C62A;
+    pointer-events: none;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-media-panel {
+    position: relative !important;
+    top: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 0 21px !important;
+    z-index: auto !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-media-panel::after,
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-row-spacer,
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-media-row-spacer,
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-stack::after,
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout::after,
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-visual {
+    display: none !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-media-block {
+    left: 0 !important;
+    width: 100% !important;
+    transform: none !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-photo-stack {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    aspect-ratio: var(--phone-photo-ratio, 1) !important;
+    margin-inline: 0 !important;
+    clip-path: none !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case-body {
+    width: 100% !important;
+    padding-top: 0 !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-rule {
+    max-width: 100% !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case-header > .gallery-rule::after {
+    display: none !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-block-actions {
+    width: 100% !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-action-button {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    justify-content: center !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout > .gallery-rule--bottom {
+    display: none !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-photo-matrix,
+html.gallery-tablet-portrait .phone-gallery-flow #artist-work-matrix {
+    width: min(100%, calc(3 * var(--work-circle-size))) !important;
+    margin-inline: auto !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    aspect-ratio: 1 !important;
+    gap: 0 !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-photo-matrix > .work-orb:nth-child(n + 10),
+html.gallery-tablet-portrait .phone-gallery-flow #artist-work-matrix > .work-orb:nth-child(n + 10) {
+    display: none !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case + .gallery-case {
+    margin-top: calc(2 * var(--gallery-paragraph-gap, 16.8px)) !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow .gallery-photo-matrix-block {
+    margin-top: 32.3789px !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow .artist-work-gallery { margin-top: 33.6px !important; padding-top: 0 !important; }
+
+html.gallery-tablet-portrait .phone-photo-rail { display: none; }
+
+html.gallery-tablet-portrait .phone-gallery-flow .has-phone-rail .gallery-photo-stack { display: none !important; }
+
+html.gallery-tablet-portrait .phone-gallery-flow .phone-photo-rail {
+    position: relative;
+    display: flex;
+    width: 100vw;
+    left: calc((100% - 100vw) / 2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow .phone-photo-rail::-webkit-scrollbar { display: none; }
+
+html.gallery-tablet-portrait .phone-gallery-flow .phone-photo-card {
+    display: block;
+    position: relative;
+    flex: 0 0 calc(100vw - 56px);
+    width: calc(100vw - 56px);
+    height: calc(100vw - 56px);
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    overflow: hidden;
+    scroll-snap-align: start;
+    background: transparent;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow .phone-rail-image {
+    display: block;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow .phone-photo-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+
+html.gallery-tablet-portrait,
+html.gallery-tablet-portrait body { background-color: #fff; }
+
+:root.gallery-tablet-portrait { --home-shell-top: calc(20px + env(safe-area-inset-top, 0px)) !important; }
+
+html.gallery-tablet-portrait body::before {
+    content: ''; position: fixed; top: 0; left: 0; right: 0;
+    height: env(safe-area-inset-top, 0px); background: #fff;
+    z-index: 99; pointer-events: none;
+  }
+
+html.gallery-tablet-portrait .is-section-page .matrix-header {
+    top: max(var(--section-menu-current-top), calc(20px + env(safe-area-inset-top, 0px))) !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow .matrix-header::before {
+    top: -100vh !important;
+    background: #fff !important;
+  }
+
+html.gallery-tablet-portrait .work-dialog { padding-top: env(safe-area-inset-top, 0px); }
+
+html.gallery-tablet-portrait .work-dialog .drawer-scroll {
+    height: calc(100dvh - 64px - env(safe-area-inset-top, 0px));
+  }
+
+html.gallery-tablet-portrait .drawer-close,
+html.gallery-tablet-portrait .purchase-close {
+    -webkit-appearance: none; appearance: none;
+    color: var(--ink) !important; background: var(--accent) !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+html.gallery-tablet-portrait:not([data-phone-input="keyboard"]) :is(.drawer-close,
+html.gallery-tablet-portrait .purchase-close):focus {
+    outline: none !important; box-shadow: none !important;
+    transform: none !important;
+  }
+
+
+:root.gallery-tablet-portrait {
+    --tablet-columns: 6;
+    --tablet-menu-columns: 8;
+    --phone-menu-gap: 7.8px;
+    --phone-menu-height: var(--phone-menu-tile);
+    --header-gap: 32px !important;
+    --matrix-top-offset: calc(var(--phone-menu-height) + 32px) !important;
+  }
+
+html.gallery-tablet-portrait .matrix-frame {
+    width: min(calc(100vw - 80px), calc(var(--tablet-columns) * var(--work-circle-size))) !important;
+    max-width: calc(100vw - 64px) !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header {
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    grid-template-rows: var(--phone-menu-tile) !important;
+    height: var(--phone-menu-tile) !important;
+  }
+
+html.gallery-tablet-portrait .matrix-header .tab-number,
+html.gallery-tablet-portrait .matrix-header .tab-name {
+    font-size: 12.65px !important;
+    font-weight: 700 !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case-header { padding-bottom: 24px !important; }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-media-panel { margin-bottom: 24px !important; }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case-body { max-width: 680px; margin-inline: auto; }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-case + .gallery-case { margin-top: 48px !important; }
+
+html.gallery-tablet-portrait .phone-gallery-flow .phone-photo-card {
+    flex-basis: min(calc(100vw - 80px), calc(6 * var(--work-circle-size)));
+    width: min(calc(100vw - 80px), calc(6 * var(--work-circle-size)));
+    height: min(calc(100vw - 80px), calc(6 * var(--work-circle-size)));
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-photo-matrix,
+html.gallery-tablet-portrait .phone-gallery-flow #artist-work-matrix {
+    width: min(100%, calc(5 * var(--work-circle-size))) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    aspect-ratio: auto !important;
+  }
+
+html.gallery-tablet-portrait .phone-gallery-flow #gallery-photo-matrix > .work-orb:nth-child(n + 10),
+html.gallery-tablet-portrait .phone-gallery-flow #artist-work-matrix > .work-orb:nth-child(n + 10) { display: block !important; }
+
+html.gallery-tablet-portrait .phone-gallery-flow .gallery-photo-matrix-block,
+html.gallery-tablet-portrait .phone-gallery-flow .artist-work-gallery { margin-top: 48px !important; }
+
+html.gallery-tablet-portrait .phone-gallery-flow .gallery-photo-stack { max-height: none !important; }
+
+html.gallery-tablet-portrait .section-page .works-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+
+}

@@ -1,3 +1,41 @@
+/* GARDARI_TABLET_1_2_0: portrait-only tablet adaptation; landscape uses desktop. */
+(() => {
+  const root = document.documentElement;
+  const phone = matchMedia('(max-width: 600px)');
+  const portrait = matchMedia('(min-width: 601px) and (max-width: 1100px) and (orientation: portrait)');
+  const touch = matchMedia('(any-pointer: coarse)');
+  const changes = new EventTarget();
+  let active = false;
+  function reviewTablet() {
+    try {
+      // The existing editor's four device controls already size and label this shell.
+      if (new URLSearchParams(location.search).has('editor_view'))
+        return !!frameElement?.closest('.device-shell.is-tablet');
+      if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname))
+        return !!frameElement?.closest('#tablet') || new URLSearchParams(location.search).get('tablet_preview') === '1';
+    } catch {}
+    return false;
+  }
+  const compactMedia = {
+    get matches() { return phone.matches || active; },
+    addEventListener: (...args) => changes.addEventListener(...args),
+    removeEventListener: (...args) => changes.removeEventListener(...args)
+  };
+  window.GalleryTablet = {get active() { return active; }, compactMedia};
+  function sync() {
+    const next = portrait.matches && (touch.matches || reviewTablet());
+    const changed = next !== active;
+    active = next;
+    root.classList.toggle('gallery-tablet-portrait', active);
+    if (changed) changes.dispatchEvent(new Event('change'));
+  }
+  phone.addEventListener('change', () => { sync(); changes.dispatchEvent(new Event('change')); });
+  portrait.addEventListener('change', sync);
+  touch.addEventListener('change', sync);
+  addEventListener('resize', sync);
+  sync();
+})();
+
 /* Shared header: the homepage and Gallery section use the same saved settings. */
 (()=>{
   "use strict";
@@ -36,7 +74,7 @@
       frame=0;
       const width=pack?.getBoundingClientRect().width;
       if(width)document.documentElement.style.setProperty('--section-menu-width',width+'px');
-      const height=header.getBoundingClientRect().height,gap=number('header:matrixGap',33);
+      const height=header.getBoundingClientRect().height,gap=window.GalleryTablet.active ? 32 : number('header:matrixGap',33);
       const contentTop=shell.getBoundingClientRect().top+scrollY+parseFloat(getComputedStyle(shell).paddingTop);
       const start=contentTop-gap-height,boundary=number('section:menuTop',20);
       const top=Math.max(boundary,start-scrollY);
@@ -200,7 +238,8 @@ function installPhoneLayout() {
   let lastSize = null;
   function sync() {
     const gap = parseFloat(getComputedStyle(root).getPropertyValue('--phone-menu-gap')) || 0;
-    const size = (pack.getBoundingClientRect().width - 3 * gap) / 4;
+    const columns = window.GalleryTablet.active ? 8 : 4;
+    const size = (pack.getBoundingClientRect().width - (columns - 1) * gap) / columns;
     if (size <= 0 || size === lastSize) return;
     lastSize = size;
     root.style.setProperty('--phone-menu-tile', size + 'px');
@@ -212,7 +251,7 @@ function installPhoneLayout() {
 
 /* Text actions, menu labels and purchase actions: phone-only type scaling. */
 (() => {
-  const media = matchMedia('(max-width: 600px)');
+  const media = window.GalleryTablet.compactMedia;
   const selector = '.gallery-action-button,.drawer-buy,.drawer-next,.section-disclosure summary,.filter-btn,.tab-name,.tab-number';
   const originals = new Map();
   function update() {
@@ -245,7 +284,7 @@ function installPhoneLayout() {
 function installPhoneContent() {
   'use strict';
   if (document.body.dataset.page === 'home' || !document.querySelector('#gallery-layout')) return;
-  const media = matchMedia('(max-width: 600px)');
+  const media = window.GalleryTablet.compactMedia;
   const weight = '3';
   const strokes = {'0': 0, '1': .3, '2': .65, '3': 1};
   const stroke = strokes[weight] || 0;
@@ -289,9 +328,66 @@ function installPhoneContent() {
     const y = baseline.getBoundingClientRect().top;
     return {top: y - metrics.actualBoundingBoxAscent, bottom: y + metrics.actualBoundingBoxDescent};
   }
+  // Tablet titles fit the actual working field; every physical line keeps its yellow fill.
+  function measureTabletTypography() {
+    pairs.forEach(({card, heading, originalRows}) => {
+      const title = card.querySelector('h2');
+      if (!titleBases.has(title)) titleBases.set(title, {
+        fontValue: title.style.getPropertyValue('font-size'), fontPriority: title.style.getPropertyPriority('font-size'),
+        lineValue: title.style.getPropertyValue('line-height'), linePriority: title.style.getPropertyPriority('line-height')
+      });
+      titleBases.get(title).tabletMeasured = true;
+      title.style.setProperty('font-size', '40px', 'important');
+      title.style.setProperty('line-height', '44px', 'important');
+      const style = getComputedStyle(title);
+      context.font = fontOf(style);
+      const tracking = parseFloat(style.letterSpacing) || 0;
+      const limit = title.clientWidth - 42;
+      const text = originalRows.map(node => node.textContent).join('').trim().replace(/\s+/g, ' ');
+      const rows = [];
+      let row = '';
+      for (const word of text.split(' ')) {
+        const next = row ? row + ' ' + word : word;
+        const width = context.measureText(next.toLocaleUpperCase('ru-RU')).width + (next.length - 1) * tracking;
+        if (row && width > limit) { rows.push(row); row = word; }
+        else row = next;
+      }
+      if (row) rows.push(row);
+      const old = [...heading.querySelectorAll('.gallery-heading-line')].map(line => line.firstChild?.textContent || '');
+      if (JSON.stringify(old) !== JSON.stringify(rows)) heading.replaceChildren(...rows.map(text => {
+        const line = document.createElement('span');
+        line.className = 'gallery-heading-line'; line.textContent = text; return line;
+      }));
+      heading.querySelectorAll('.gallery-heading-line').forEach(line => {
+        lineInk(line);
+        context.font = fontOf(getComputedStyle(line));
+        const letter = context.measureText('Н');
+        const range = document.createRange();
+        range.selectNodeContents(line.firstChild);
+        const textRect = range.getBoundingClientRect(), rect = line.getBoundingClientRect();
+        const baseline = line.querySelector('[data-phone-baseline]').getBoundingClientRect().top;
+        line.style.setProperty('--phone-fill-left', (textRect.right - rect.left + 12) + 'px');
+        line.style.setProperty('--phone-fill-top', (baseline - letter.actualBoundingBoxAscent - rect.top - stroke / 2) + 'px');
+        line.style.setProperty('--phone-fill-height', (letter.actualBoundingBoxAscent + letter.actualBoundingBoxDescent + stroke) + 'px');
+      });
+    });
+  }
+
   function measureTypography() {
     typographyFrame = 0;
     if (!enabled || !context) return;
+    if (window.GalleryTablet.active) { measureTabletTypography(); return; }
+    // Restore the accepted phone baseline before crossing back from portrait tablet.
+    pairs.forEach(({card, heading, originalRows}) => {
+      const title = card.querySelector('h2'), base = titleBases.get(title);
+      if (!base?.tabletMeasured) return;
+      heading.replaceChildren(...originalRows);
+      for (const [property, value, priority] of [['font-size', base.fontValue, base.fontPriority], ['line-height', base.lineValue, base.linePriority]]) {
+        if (value) title.style.setProperty(property, value, priority); else title.style.removeProperty(property);
+      }
+      delete card.querySelector('.gallery-case-header').dataset.phoneRowsFitted;
+      titleBases.delete(title);
+    });
     pairs.forEach(({card}) => {
       const header = card.querySelector('.gallery-case-header');
       const title = header.querySelector('h2');
@@ -437,7 +533,7 @@ function installPhoneContent() {
     } else {
       document.body.classList.remove('phone-gallery-flow');
       pairs.forEach(({panel, frame, marker, heading, originalRows}) => {
-        if (document.body.dataset.page === 'contacts') heading.replaceChildren(...originalRows);
+        if (document.body.dataset.page === 'contacts' || titleBases.get(heading.closest('h2'))?.tabletMeasured) heading.replaceChildren(...originalRows);
         marker.after(panel);
         frame.style.removeProperty('--phone-photo-ratio');
       });
@@ -496,7 +592,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 /* GARDARI_MOBILE_1_1_2: cover the real iPhone safe area; keep keyboard focus. */
 (() => {
   const root = document.documentElement;
-  const media = matchMedia('(max-width: 600px)');
+  const media = window.GalleryTablet.compactMedia;
   const viewport = document.querySelector('meta[name="viewport"]');
   const original = viewport?.getAttribute('content');
   function syncViewport() {
