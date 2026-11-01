@@ -954,3 +954,19 @@ html.gallery-tablet-portrait .section-page .works-grid { grid-template-columns: 
     width: 100% !important; height: auto !important; aspect-ratio: 1;
   }
 }
+
+/* Fixed tablet Home navigation; preserve its initial horizontal position. */
+html.gallery-tablet :is(body:not([data-page]),body[data-page="home"]) .matrix-header {
+  position: fixed !important;
+  top: max(var(--tablet-home-menu-top, 20px), calc(20px + env(safe-area-inset-top, 0px))) !important;
+  left: var(--tablet-home-menu-left, 0px) !important;
+  right: auto !important; bottom: auto !important;
+  width: var(--tablet-home-menu-width, 100%) !important;
+  transform: none !important; z-index:100;
+}
+html.gallery-tablet :is(body:not([data-page]),body[data-page="home"]) .matrix-header::before {
+  content:''; position:absolute; top:-100vh;
+  left:calc((100% - 100vw) / 2); width:100vw;
+  bottom:calc(-1 * var(--header-gap));
+  background:var(--paper, #fff); z-index:-1; pointer-events:none;
+}

@@ -4,8 +4,9 @@
   const phone = matchMedia('(max-width: 600px)');
   const portrait = matchMedia('(min-width: 601px) and (max-width: 1100px) and (orientation: portrait)');
   const touch = matchMedia('(any-pointer: coarse)');
+  const tabletScreen = matchMedia('(min-width: 601px) and (max-width: 1399px)');
   const changes = new EventTarget();
-  let active = false;
+  let active = false, tablet = false;
   function reviewTablet() {
     try {
       // The existing editor's four device controls already size and label this shell.
@@ -22,17 +23,21 @@
     addEventListener: (...args) => changes.addEventListener(...args),
     removeEventListener: (...args) => changes.removeEventListener(...args)
   };
-  window.GalleryTablet = {get active() { return active; }, compactMedia};
+  window.GalleryTablet = {get active() { return active; }, get tablet() { return tablet; }, compactMedia};
   function sync() {
     const next = portrait.matches && (touch.matches || reviewTablet());
-    const changed = next !== active;
+    const nextTablet = tabletScreen.matches && (reviewTablet() || (touch.matches && Math.min(screen.width,screen.height) >= 600));
+    const changed = next !== active || nextTablet !== tablet;
+    tablet = nextTablet;
     active = next;
     root.classList.toggle('gallery-tablet-portrait', active);
+    root.classList.toggle('gallery-tablet', tablet);
     if (changed) changes.dispatchEvent(new Event('change'));
   }
   phone.addEventListener('change', () => { sync(); changes.dispatchEvent(new Event('change')); });
   portrait.addEventListener('change', sync);
   touch.addEventListener('change', sync);
+  tabletScreen.addEventListener('change', sync);
   addEventListener('resize', sync);
   sync();
 })();
@@ -250,32 +255,37 @@ function installPhoneLayout() {
   sync();
 })();
 
-/* Text actions, menu labels and purchase actions: phone-only type scaling. */
+/* Existing compact type plus 50% larger tablet section actions. */
 (() => {
   const media = window.GalleryTablet.compactMedia;
   const selector = '.gallery-action-button,.drawer-buy,.drawer-next,.section-disclosure summary,.filter-btn,.tab-name,.tab-number';
   const originals = new Map();
-  function update() {
-    if (!media.matches) {
-      for (const [node, base] of originals) {
-        for (const [property, value, priority] of base.inline) {
-          if (value) node.style.setProperty(property, value, priority);
-          else node.style.removeProperty(property);
-        }
-      }
-      originals.clear(); return;
+  let lastMode = '';
+  function restore() {
+    for (const [node, base] of originals) for (const [property, value, priority] of base.inline) {
+      if (value) node.style.setProperty(property, value, priority); else node.style.removeProperty(property);
     }
+    originals.clear();
+  }
+  function update() {
+    const tablet = window.GalleryTablet.tablet;
+    const compact = media.matches;
+    const mode = (compact ? 'compact' : 'wide') + (tablet ? '-tablet-' + innerWidth : '');
+    if (mode !== lastMode) { restore(); lastMode = mode; }
+    if (!compact && !tablet) return;
     for (const node of document.querySelectorAll(selector)) {
-      if (originals.has(node)) continue;
+      const action = node.matches('.gallery-action-button');
+      if ((!compact && !action) || originals.has(node)) continue;
       const size = node.matches('.tab-name,.tab-number') ? Math.min(11, Math.max(9, innerWidth * .028)) : parseFloat(getComputedStyle(node).fontSize);
       originals.set(node, {inline: ['font-size','font-weight'].map(property => [property,node.style.getPropertyValue(property),node.style.getPropertyPriority(property)])});
-      node.style.setProperty('font-size', size * 1.15 + 'px', 'important');
-      node.style.setProperty('font-weight', '700', 'important');
+      node.style.setProperty('font-size', size * (compact ? 1.15 : 1) * (tablet && action ? 1.5 : 1) + 'px', 'important');
+      if (compact) node.style.setProperty('font-weight', '700', 'important');
       node.dataset.phoneButtonBaseSize = String(size);
     }
   }
-  new MutationObserver(update).observe(document.body, {childList: true, subtree: true});
-  media.addEventListener('change', update);
+  new MutationObserver(update).observe(document.body, {childList:true,subtree:true});
+  media.addEventListener('change',update);
+  addEventListener('resize',update);
   update();
 })();
 
@@ -397,6 +407,17 @@ function installPhoneContent() {
       const title = card.querySelector('h2'), base = titleBases.get(title);
       if (!base?.tabletMeasured) return;
       heading.replaceChildren(...originalRows);
+      if (document.body.dataset.page === 'contacts' && heading.querySelectorAll('.gallery-heading-line').length === 1) {
+        const text = heading.textContent, spaces = [...text.matchAll(/\s+/g)];
+        if (spaces.length) {
+          const split = spaces.reduce((best, match) => Math.abs(match.index - text.length / 2) < Math.abs(best.index - text.length / 2) ? match : best);
+          const first = document.createElement('span'), second = document.createElement('span');
+          first.className = second.className = 'gallery-heading-line';
+          first.textContent = text.slice(0, split.index + split[0].length);
+          second.textContent = text.slice(split.index + split[0].length);
+          heading.replaceChildren(first, second);
+        }
+      }
       for (const [property, value, priority] of [['font-size', base.fontValue, base.fontPriority], ['line-height', base.lineValue, base.linePriority]]) {
         if (value) title.style.setProperty(property, value, priority); else title.style.removeProperty(property);
       }
@@ -628,3 +649,26 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 })();
 
 /* GARDARI_TABLET_1_2_1: native editor overrides retain priority over tablet defaults. */
+
+/* Tablet Home header follows the same top boundary as section headers. */
+(() => {
+  const pack = document.querySelector('#matrix-pack'), header = document.querySelector('.matrix-header');
+  if (!pack || !header || document.body.dataset.page && document.body.dataset.page !== 'home') return;
+  function syncTabletHomeHeader() {
+    if (!window.GalleryTablet.tablet) return;
+    const r = pack.getBoundingClientRect(), height = header.getBoundingClientRect().height;
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-gap')) || 33;
+    const safe = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--home-shell-top')) || 20;
+    const top = Math.max(20, r.top - height - gap);
+    const root = document.documentElement.style;
+    root.setProperty('--tablet-home-menu-top', top + 'px');
+    root.setProperty('--tablet-home-menu-left', r.left + 'px');
+    root.setProperty('--tablet-home-menu-width', r.width + 'px');
+  }
+  new ResizeObserver(syncTabletHomeHeader).observe(pack);
+  new ResizeObserver(syncTabletHomeHeader).observe(header);
+  addEventListener('scroll',syncTabletHomeHeader,{passive:true});
+  addEventListener('resize',syncTabletHomeHeader);
+  window.GalleryTablet.compactMedia.addEventListener('change',syncTabletHomeHeader);
+  syncTabletHomeHeader();
+})();
