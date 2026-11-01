@@ -941,3 +941,16 @@ html.gallery-tablet-portrait .section-page .works-grid { grid-template-columns: 
 }
 
 /* GARDARI_TABLET_1_2_1: tablet title size follows the authored native size at 4/3 scale. */
+
+/* Author tablet refinements: full-width circles and 20% taller text actions. */
+@media (min-width: 601px) and (max-width: 1100px) and (orientation: portrait) {
+  html.gallery-tablet-portrait .matrix-pack { width: 100% !important; }
+  html.gallery-tablet-portrait #work-matrix { --work-circle-size: var(--tablet-orb-size, 128.547px); }
+  html.gallery-tablet-portrait .phone-gallery-flow #gallery-layout .gallery-action-button { min-height: 57.6px !important; }
+  html.gallery-tablet-portrait .phone-gallery-flow :is(#gallery-photo-matrix, #artist-work-matrix) {
+    width: 100% !important; grid-auto-rows: auto !important;
+  }
+  html.gallery-tablet-portrait .phone-gallery-flow :is(#gallery-photo-matrix, #artist-work-matrix) > .work-orb {
+    width: 100% !important; height: auto !important; aspect-ratio: 1;
+  }
+}

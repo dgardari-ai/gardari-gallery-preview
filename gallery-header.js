@@ -9,8 +9,9 @@
   function reviewTablet() {
     try {
       // The existing editor's four device controls already size and label this shell.
-      if (new URLSearchParams(location.search).has('editor_view'))
-        return !!frameElement?.closest('.device-shell.is-tablet');
+      const editorFrame = frameElement;
+      if (editorFrame && ['preview', 'compare-preview'].includes(editorFrame.id))
+        return !!editorFrame.closest('.device-shell.is-tablet');
       if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname))
         return !!frameElement?.closest('#tablet') || new URLSearchParams(location.search).get('tablet_preview') === '1';
     } catch {}
@@ -41,9 +42,9 @@
   "use strict";
   const $=s=>document.querySelector(s);
   const {value,number}=window.GalleryCustomization;
-  const editorFrame=new URLSearchParams(location.search).has('editor_view');
+  const editorFrame=new URLSearchParams(location.search).has('editor_view') || (['preview','compare-preview'].includes(frameElement?.id) && !!frameElement.closest('.device-shell'));
   const releaseKey=!editorFrame&&document.currentScript?.src?new URL(document.currentScript.src,location.href).searchParams.get('v'):null;
-  function pageHref(file){if(!releaseKey)return file;const url=new URL(file,location.href);url.searchParams.set('v',releaseKey);return url.href;}
+  function pageHref(file){if(editorFrame){const url=new URL(file,location.href);url.searchParams.set('editor_view',new URLSearchParams(location.search).get('editor_view')||String(Date.now()));return url.href;}if(!releaseKey)return file;const url=new URL(file,location.href);url.searchParams.set('v',releaseKey);return url.href;}
   if('scrollRestoration' in history)history.scrollRestoration='manual';
   let entryInteracted=false;
   for(const type of ['wheel','touchstart','pointerdown','keydown'])addEventListener(type,()=>{entryInteracted=true;},{passive:true});
@@ -107,7 +108,7 @@
     location.href=pageHref(pages[button.dataset.menu]);
   }));
 
-  if(releaseKey){const brand=document.querySelector('.brand-pill');if(brand)brand.href=pageHref(pages.home);}
+  if(releaseKey||editorFrame){const brand=document.querySelector('.brand-pill');if(brand)brand.href=pageHref(pages.home);}
 
   const header=document.querySelector('.matrix-header'),nav=document.querySelector('.section-tabs');
   const matrixFrame=document.querySelector('.matrix-frame');

@@ -4,7 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const artist=document.body.dataset.page==='artist',matrix=$ (artist?'#artist-work-matrix':'#work-matrix');
   if(!matrix)return;
-  const state = {works: [], visible: [], order: [], columns: 0};
+  const state = {works: [], visible: [], order: [], columns: 0, rows: 0, diameter: 0};
   let mediaMap = {};
   const settings = window.GalleryCustomization;
   const value = settings.value, number = settings.number;
@@ -31,15 +31,19 @@
     if (!state.works.length) return;
 
     if (newEntry || !state.order.length) state.order = editorOrder ? editorOrder.map(id=>state.works.find(w=>w.id===id)).filter(Boolean) : shuffled(state.works);
-    const diameter = parseFloat(getComputedStyle(matrix).getPropertyValue("--work-circle-size"));
-    const columns = artist?5:Math.max(1, Math.min(
+    const tablet = !artist && window.GalleryTablet?.active;
+    const diameter = tablet ? $(".matrix-frame").getBoundingClientRect().width / 5 : parseFloat(getComputedStyle(matrix).getPropertyValue("--work-circle-size"));
+    if (tablet) matrix.style.setProperty('--tablet-orb-size', diameter + 'px');
+    const columns = tablet?5:artist?5:Math.max(1, Math.min(
       Math.floor(($(".matrix-frame").getBoundingClientRect().width + .01) / diameter),
       Math.floor(state.works.length / number("matrix:rows",5))
     ));
-    if (!newEntry && columns === state.columns) return;
+    const rows = tablet ? Math.max(1, Math.min(Math.floor(state.works.length / 5), Math.ceil((innerHeight - (matrix.getBoundingClientRect().top + scrollY)) / diameter))) : (artist ? 2 : number("matrix:rows",5));
+    if (!newEntry && columns === state.columns && rows === state.rows && Math.abs(diameter-state.diameter) < .01) return;
+    state.rows = rows; state.diameter = diameter;
     state.columns = columns;
     if(!artist)$("#matrix-pack").style.setProperty("--matrix-columns", String(columns));
-    state.visible = state.order.slice(0, columns * (artist?2:number("matrix:rows",5)));
+    state.visible = state.order.slice(0, columns * rows);
     matrix.innerHTML = state.visible.map((work) => `<button type="button" class="work-orb" data-work="${esc(work.id)}" aria-label="Открыть произведение «${esc(work.title)}»">
       <span class="work-orb-viewport"><img src="${safeHref(value(`preview:${work.id}:image`,work.cover))}" alt="" decoding="async"></span>
     </button>`).join("");
@@ -72,6 +76,7 @@
       if ($("#work-dialog").open) { layoutPending = true; return; }
       renderMatrix();
     }).observe(artist?$("#artist-work-gallery"):$(".matrix-frame"));
+    addEventListener("resize", () => { if (artist) return; if ($("#work-dialog").open) { layoutPending = true; return; } renderMatrix(); });
     $("#work-dialog").addEventListener("close", () => {
       if (!layoutPending) return;
       layoutPending = false;

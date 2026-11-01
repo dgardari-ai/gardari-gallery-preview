@@ -41,7 +41,7 @@
     return links?`<div class="gallery-block-actions">${links}</div>`:'';
   }
   function headingRows(title){
-    const text=String(title);if(document.body.dataset.page==='contacts')return [text];const words=Array.from(text.matchAll(/\s+/gu));
+    const text=String(title);if(text==='Живопись и графика')return ['Живопись ','и графика'];if(document.body.dataset.page==='contacts')return [text];const words=Array.from(text.matchAll(/\s+/gu));
     if(!words.length)return [text,''];
     const conjunction=text.match(/^(.+?\s+и)(\s+)(.+)$/iu);
     const split=conjunction?conjunction[1].length+conjunction[2].length
