@@ -330,15 +330,29 @@ function installPhoneContent() {
   }
   // Tablet titles fit the actual working field; every physical line keeps its yellow fill.
   function measureTabletTypography() {
+    const setFill = (line, name, value) => {
+      if (line.style.getPropertyValue(name) !== value) line.style.setProperty(name, value);
+    };
     pairs.forEach(({card, heading, originalRows}) => {
       const title = card.querySelector('h2');
       if (!titleBases.has(title)) titleBases.set(title, {
         fontValue: title.style.getPropertyValue('font-size'), fontPriority: title.style.getPropertyPriority('font-size'),
         lineValue: title.style.getPropertyValue('line-height'), linePriority: title.style.getPropertyPriority('line-height')
       });
-      titleBases.get(title).tabletMeasured = true;
-      title.style.setProperty('font-size', '40px', 'important');
-      title.style.setProperty('line-height', '44px', 'important');
+      const base = titleBases.get(title);
+      if (!base.tabletMeasured) {
+        for (const [property, value, priority] of [['font-size', base.fontValue, base.fontPriority], ['line-height', base.lineValue, base.linePriority]]) {
+          if (value) title.style.setProperty(property, value, priority); else title.style.removeProperty(property);
+        }
+        const native = getComputedStyle(title);
+        base.tabletNativeSize = parseFloat(native.fontSize) || 30;
+        base.tabletNativeLineHeight = parseFloat(native.lineHeight) || 32;
+      }
+      base.tabletMeasured = true;
+      const tabletSize = base.tabletNativeSize * 4 / 3;
+      if (title.style.getPropertyValue('font-size') !== tabletSize + 'px') title.style.setProperty('font-size', tabletSize + 'px', 'important');
+      const tabletLineHeight = tabletSize * 1.1 * base.tabletNativeLineHeight / 32;
+      if (title.style.getPropertyValue('line-height') !== tabletLineHeight + 'px') title.style.setProperty('line-height', tabletLineHeight + 'px', 'important');
       const style = getComputedStyle(title);
       context.font = fontOf(style);
       const tracking = parseFloat(style.letterSpacing) || 0;
@@ -366,9 +380,9 @@ function installPhoneContent() {
         range.selectNodeContents(line.firstChild);
         const textRect = range.getBoundingClientRect(), rect = line.getBoundingClientRect();
         const baseline = line.querySelector('[data-phone-baseline]').getBoundingClientRect().top;
-        line.style.setProperty('--phone-fill-left', (textRect.right - rect.left + 12) + 'px');
-        line.style.setProperty('--phone-fill-top', (baseline - letter.actualBoundingBoxAscent - rect.top - stroke / 2) + 'px');
-        line.style.setProperty('--phone-fill-height', (letter.actualBoundingBoxAscent + letter.actualBoundingBoxDescent + stroke) + 'px');
+        setFill(line, '--phone-fill-left', (textRect.right - rect.left + 12) + 'px');
+        setFill(line, '--phone-fill-top', (baseline - letter.actualBoundingBoxAscent - rect.top - stroke / 2) + 'px');
+        setFill(line, '--phone-fill-height', (letter.actualBoundingBoxAscent + letter.actualBoundingBoxDescent + stroke) + 'px');
       });
     });
   }
@@ -570,7 +584,10 @@ function installPhoneContent() {
     media.addEventListener('change', updateGaps);
     updateGaps();
   }
+  const designerTypography = () => { if (window.GalleryTablet.active) queueTypography(); };
+  document.addEventListener('vmg:design-rendered', designerTypography);
   layout.phoneLayoutCleanup = () => {
+    document.removeEventListener('vmg:design-rendered', designerTypography);
     enabled = false;
     titleObserver.disconnect();
     contactObserver?.disconnect();
@@ -608,3 +625,5 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
     if (media.matches && ['Tab','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(event.key)) root.dataset.phoneInput = 'keyboard';
   }, true);
 })();
+
+/* GARDARI_TABLET_1_2_1: native editor overrides retain priority over tablet defaults. */
