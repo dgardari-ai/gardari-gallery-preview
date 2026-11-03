@@ -556,7 +556,8 @@ function installPhoneContent() {
         if (card.dataset.gallerySection === 'artist-2') {
           const photo = frame.querySelector('.gallery-photo');
           const naturalFrame = () => {
-            if (photo?.naturalWidth && photo.naturalHeight) frame.style.setProperty('--phone-photo-ratio', String(photo.naturalWidth / photo.naturalHeight));
+            const original = window.GalleryImages.dimensions(photo);
+            if (original.width && original.height) frame.style.setProperty('--phone-photo-ratio', String(original.width / original.height));
           };
           photo?.addEventListener('load', naturalFrame);
           naturalFrame();

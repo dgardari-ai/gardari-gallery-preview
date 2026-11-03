@@ -45,7 +45,7 @@
     if(!artist)$("#matrix-pack").style.setProperty("--matrix-columns", String(columns));
     state.visible = state.order.slice(0, columns * rows);
     matrix.innerHTML = state.visible.map((work) => `<button type="button" class="work-orb" data-work="${esc(work.id)}" aria-label="Открыть произведение «${esc(work.title)}»">
-      <span class="work-orb-viewport"><img src="${safeHref(value(`preview:${work.id}:image`,work.cover))}" alt="" decoding="async"></span>
+      <span class="work-orb-viewport"><img${window.GalleryImages.attributes(safeHref(value(`preview:${work.id}:image`,work.cover)),"orb")} src="${safeHref(value(`preview:${work.id}:image`,work.cover))}" alt="" decoding="async"></span>
     </button>`).join("");
     matrix.querySelectorAll("[data-work]").forEach(button=>settings.crop(button.querySelector("img"),button.dataset.work));
     matrix.setAttribute("aria-busy", "false");

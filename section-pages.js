@@ -95,7 +95,7 @@
       button.setAttribute('aria-label',`Открыть произведение «${work.title}»`);
       const preview=value(`preview:${work.id}:image`,work.cover || work.images?.[0]?.url || '');
       const metadata=cardMetadata(work);
-      button.innerHTML=`<span class="work-card-visual"><img src="${esc(window.GalleryArtwork.resolveMedia(preview))}" alt="${esc(work.title)}" loading="lazy" decoding="async"></span><span class="work-card-copy"><span class="work-card-title">${esc(work.title)}</span>${metadata?`<span class="work-card-label">${esc(metadata)}</span>`:''}</span>`;
+      button.innerHTML=`<span class="work-card-visual"><img${window.GalleryImages.attributes(window.GalleryArtwork.resolveMedia(preview),"card")} src="${esc(window.GalleryArtwork.resolveMedia(preview))}" alt="${esc(work.title)}" loading="lazy" decoding="async"></span><span class="work-card-copy"><span class="work-card-title">${esc(work.title)}</span>${metadata?`<span class="work-card-label">${esc(metadata)}</span>`:''}</span>`;
       button.addEventListener('click',()=>window.GalleryArtwork.open(work.id,{ids}));
       host.append(button);crop(button.querySelector('img'),work.id);
     }

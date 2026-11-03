@@ -59,7 +59,7 @@
       <div class="gallery-photo-stack" data-gallery-frame="${slide.id}" data-gallery-section="${slide.id}" data-gallery-photo="0">
         <div class="gallery-photo-viewport" data-gallery-viewport="${slide.id}">
           <button type="button" class="gallery-photo-open" data-gallery-photo-open="${slide.id}" aria-label="Увеличить фотографию · ${esc(slide.title)}"${slide.images.length?'':' disabled'}>
-            ${slide.images.map((image,i)=>`<img class="gallery-photo" src="${esc(image.src)}" alt="${esc(image.alt)}" data-slide="${index}" data-photo="${image.slot}" data-gallery-section="${slide.id}" aria-hidden="${i!==0}" loading="eager" decoding="${i===0?'sync':'async'}">`).join('')}
+            ${slide.images.map((image,i)=>`<img class="gallery-photo"${window.GalleryImages.attributes(image.src,"photo")} src="${esc(image.src)}" alt="${esc(image.alt)}" data-slide="${index}" data-photo="${image.slot}" data-gallery-section="${slide.id}" aria-hidden="${i!==0}" loading="eager" decoding="${i===0?'sync':'async'}">`).join('')}
             ${slide.images.length?'':'<span class="gallery-photo-missing" role="status">Изображение недоступно</span>'}
           </button>
           <div class="gallery-photo-controls" data-gallery-controls="${slide.id}"${slide.images.length<2?' hidden':''}>
@@ -98,7 +98,7 @@
   function headerMetrics(){return window.GalleryHeaderMotion?.metrics()||{rail:$('.matrix-header').getBoundingClientRect().bottom+number('header:matrixGap',33),fixedRail:number('section:menuTop',20)+number('header:tileSize',55.066667)+number('header:matrixGap',33)};}
   function railTop(){return headerMetrics().rail;}
   function fixedRail(){return headerMetrics().fixedRail;}
-  function imageRatio(node,image){const width=node?.naturalWidth||image?.width,height=node?.naturalHeight||image?.height;return width>0&&height>0?width/height:1;}
+  function imageRatio(node,image){const original=window.GalleryImages.dimensions(node);const width=original.width||image?.width,height=original.height||image?.height;return width>0&&height>0?width/height:1;}
   function currentFrame(index,photo=photoIndex[index]){
     const anchor=slides[index].images[0],preview=previews.get(slides[index].id);
     const prefix=`gallery:${slides[index].id}:`;
@@ -340,7 +340,7 @@
     const render=ids=>{
       order=ids||matrixPhotos.map(image=>image.id);
       if(!ids)for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
-      photoMatrix.innerHTML=order.map(id=>{const image=matrixPhotos.find(photo=>photo.id===id);return `<button type="button" class="work-orb" id="${esc(id)}" aria-label="Увеличить фотографию · ${esc(image.alt)}"><span class="work-orb-viewport"><img src="${esc(image.src)}" alt="${esc(image.alt)}" decoding="async" loading="lazy"></span></button>`;}).join('');
+      photoMatrix.innerHTML=order.map(id=>{const image=matrixPhotos.find(photo=>photo.id===id);return `<button type="button" class="work-orb" id="${esc(id)}" aria-label="Увеличить фотографию · ${esc(image.alt)}"><span class="work-orb-viewport"><img${window.GalleryImages.attributes(image.src,"orb")} src="${esc(image.src)}" alt="${esc(image.alt)}" decoding="async" loading="lazy"></span></button>`;}).join('');
       order.forEach(id=>photoMatrix.querySelector('#'+id).addEventListener('click',()=>{const image=matrixPhotos.find(photo=>photo.id===id),full=$('#gallery-photo-full');full.src=image.src;full.alt=image.alt;dialog.showModal();}));
     };
     window.GalleryPhotoMatrix={order:()=>[...order],restoreOrder(ids){if(!Array.isArray(ids)||ids.length!==matrixPhotos.length||new Set(ids).size!==ids.length||ids.some(id=>!matrixPhotos.some(photo=>photo.id===id)))return false;render(ids);return true;},reset:()=>render()};
