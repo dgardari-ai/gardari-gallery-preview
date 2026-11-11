@@ -389,7 +389,7 @@ window.GARDARI_SECTION_PAGES = {
         },
         {
           "label": "ПЕРЕЙТИ НА БЛОГ",
-          "href": "",
+          "href": "https://blog.gardari.art/",
           "type": "link"
         }
       ]
@@ -417,7 +417,7 @@ window.GARDARI_SECTION_PAGES = {
       "actions": [
         {
           "label": "ПЕРЕЙТИ НА СТРАНИЦУ КЛУБА",
-          "href": "https://gardari.art/gardari_club",
+          "href": "https://club.gardari.art/",
           "type": "link"
         }
       ]
@@ -445,7 +445,7 @@ window.GARDARI_SECTION_PAGES = {
       "actions": [
         {
           "label": "ПЕРЕЙТИ НА САЙТ КБ",
-          "href": "https://dgardari-ai.github.io/kb-gardari/",
+          "href": "https://kb.gardari.art/",
           "type": "link"
         }
       ]
