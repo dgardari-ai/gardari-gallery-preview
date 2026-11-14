@@ -516,11 +516,14 @@
 @media (max-width: 600px) {
   html, body { background-color: #fff; }
   :root { --home-shell-top: calc(20px + env(safe-area-inset-top, 0px)) !important; }
+  /* Root-level overscan also paints the Safari chrome sampling edge when
+     safe-area is zero. It stays below navigation, above scrolling artwork. */
   body::before {
-    content: ''; position: fixed; top: 0; left: 0; right: 0;
-    height: env(safe-area-inset-top, 0px); background: #fff;
-    z-index: 99; pointer-events: none;
+    content: ''; position: fixed; top: -100vh; left: 0; right: 0;
+    height: calc(100vh + max(var(--phone-menu-backdrop-bottom, 20px), calc(20px + env(safe-area-inset-top, 0px))));
+    background: #fff; z-index: 99; pointer-events: none;
   }
+  .matrix-header { z-index: 100 !important; }
   .is-section-page .matrix-header {
     top: max(var(--section-menu-current-top), calc(20px + env(safe-area-inset-top, 0px))) !important;
   }

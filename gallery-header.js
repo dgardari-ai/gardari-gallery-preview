@@ -634,7 +634,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   const root = document.documentElement;
   const media = window.GalleryTablet.compactMedia;
   const viewport = document.querySelector('meta[name="viewport"]');
-  const original = viewport?.getAttribute('content');
+  const original = viewport?.getAttribute('content')?.replace(/,?\s*viewport-fit\s*=\s*[^,]+/g, '');
   function syncViewport() {
     if (!viewport) return;
     viewport.setAttribute('content', media.matches ? original.replace(/,?\s*viewport-fit\s*=\s*[^,]+/g, '') + ', viewport-fit=cover' : original);
@@ -672,4 +672,33 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   addEventListener('resize',syncTabletHomeHeader);
   window.GalleryTablet.compactMedia.addEventListener('change',syncTabletHomeHeader);
   syncTabletHomeHeader();
+})();
+
+/* GARDARI_IPHONE_TOP_1_3_2: independent opaque root backdrop, not a transformed header child. */
+(() => {
+  const root = document.documentElement;
+  const phone = matchMedia('(max-width: 600px)');
+  let pending = false;
+  function sync() {
+    pending = false;
+    if (!phone.matches) { root.style.removeProperty('--phone-menu-backdrop-bottom'); return; }
+    const header = document.querySelector('.matrix-header');
+    if (!header) return;
+    const gap = parseFloat(getComputedStyle(root).getPropertyValue('--header-gap')) || 24;
+    const bottom = Math.max(20, header.getBoundingClientRect().bottom + gap);
+    const value = Math.ceil(bottom * 100) / 100 + 'px';
+    if (root.style.getPropertyValue('--phone-menu-backdrop-bottom') !== value)
+      root.style.setProperty('--phone-menu-backdrop-bottom', value);
+  }
+  function queue() { if (!pending) { pending = true; requestAnimationFrame(sync); } }
+  addEventListener('scroll', queue, {passive:true});
+  addEventListener('resize', queue, {passive:true});
+  addEventListener('pageshow', queue);
+  addEventListener('gallery:ready', queue);
+  phone.addEventListener('change', queue);
+  visualViewport?.addEventListener('resize', queue, {passive:true});
+  visualViewport?.addEventListener('scroll', queue, {passive:true});
+  const header = document.querySelector('.matrix-header');
+  if (header) new ResizeObserver(queue).observe(header);
+  queue();
 })();
