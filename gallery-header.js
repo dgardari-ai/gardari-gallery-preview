@@ -720,7 +720,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   const manageControls = [...document.querySelectorAll('[data-gardari-cookie-settings]')];
   const necessaryButton = document.getElementById('gardari-consent-necessary');
   const allowButton = document.getElementById('gardari-consent-allow');
-  if (!panel || !manageControls.length || !necessaryButton || !allowButton) return;
+  if (!panel || !necessaryButton || !allowButton) return;
 
   const host = location.hostname;
   const sharedDomain = host === 'gardari.art' || host.endsWith('.gardari.art');
