@@ -979,3 +979,185 @@ html.gallery-tablet :is(body:not([data-page]),body[data-page="home"]) .matrix-he
   bottom:calc(-1 * var(--header-gap));
   background:var(--paper, #fff); z-index:-1; pointer-events:none;
 }
+
+/* GARDARI_GALLERY_PRIVACY_V1: accepted Hub interface adapted to Gallery. */
+.gardari-consent-panel {
+  position: fixed;
+  z-index: 9000;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  left: var(--consent-field-left);
+  width: var(--consent-field-width);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px 18px;
+  border: 1px solid var(--ink);
+  border-radius: var(--privacy-card-radius, 5px);
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 5px 18px rgb(32 33 36 / 9%);
+}
+.gardari-consent-copy { display: grid; gap: 8px; min-width: 0; }
+.gardari-consent-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font: 500 14px/1.3 var(--mono);
+  letter-spacing: -.025em;
+  text-transform: uppercase;
+}
+.gardari-consent-title::before {
+  content: '';
+  flex: none;
+  width: .72em;
+  height: .72em;
+  width: 1cap;
+  height: 1cap;
+  background: var(--accent);
+}
+.gardari-consent-description {
+  margin: 0;
+  color: var(--ink);
+  font: 400 12px/1.4 var(--mono);
+  letter-spacing: -.015em;
+  text-transform: none;
+  text-wrap: pretty;
+}
+.gardari-consent-policy {
+  color: var(--body);
+  font: 400 10px/1.4 var(--mono);
+  text-transform: none;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.gardari-consent-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  align-items: center;
+  gap: 20px;
+}
+.gardari-consent-links { display: grid; align-content: center; justify-items: start; gap: 4px; min-width: 0; }
+.gardari-consent-actions .gardari-consent-links > :is(a, button) {
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  color: var(--body);
+  font: 400 10px/1.4 var(--mono);
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-align: left;
+}
+.gardari-consent-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--paper);
+  font: 500 10px/1.35 var(--mono);
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  text-align: center;
+  transition: background-color 140ms var(--ease), transform 140ms var(--ease);
+}
+.gardari-consent-actions .gardari-consent-allow {
+  background: var(--accent);
+  border: 1px solid #000;
+  grid-column: 2;
+}
+.gardari-consent-actions .gardari-consent-allow:hover {
+  background: #000;
+  color: #fff;
+}
+.gardari-consent-actions .gardari-consent-necessary {
+  justify-content: flex-start;
+  padding-inline: 0;
+  border-radius: 0;
+  background: transparent;
+  font-weight: 400;
+  text-transform: uppercase;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gardari-consent-actions .gardari-consent-necessary:hover { color: #000; }
+.gardari-consent-actions button:active { transform: scale(.97); }
+.gardari-consent-panel a:hover { color: var(--ink); }
+.gallery-privacy-wide .gardari-consent-panel {
+  left: calc(var(--consent-field-left) + var(--consent-field-width) / 2);
+  width: calc(var(--consent-field-width) / 2);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.gardari-consent-footer {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 7px 20px;
+  margin-top: 36px;
+  padding: 0 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  border: 0;
+  color: var(--body);
+  font: 400 9px/1.5 var(--mono);
+  text-transform: uppercase;
+}
+.gardari-consent-footer a { text-underline-offset: 3px; }
+.gardari-consent-footer a:hover { color: var(--ink); }
+
+/* The Gallery owns its field, breakpoints and natural document end. */
+.gardari-consent-panel[hidden], .gardari-legal-group[hidden], [data-gardari-cookie-settings][hidden] { display:none !important; }
+.gardari-consent-panel { --body:#5c6065; --consent-field-left:24px; --consent-field-width:calc(100vw - 48px); box-sizing:border-box; }
+.gardari-consent-panel :is(a,button):focus-visible, .gardari-consent-footer a:focus-visible, .gardari-legal-group :is(a,button):focus-visible { outline:2px solid var(--ink); outline-offset:4px; }
+.gardari-consent-footer { --body:#5c6065; margin-bottom:0; }
+.gardari-consent-footer a { color:inherit; }
+.gardari-legal-group { margin:38px 0 0; padding:0; border:0; scroll-margin-top:var(--privacy-scroll-top,120px); }
+.gardari-legal-group h3 { margin:0 0 19px; font:700 20px/1.1 Arial,Helvetica,sans-serif; letter-spacing:-.035em; }
+.gardari-operator-details { margin:0 0 22px; }
+.gardari-operator-details > div { display:grid; grid-template-columns:110px minmax(0,1fr); gap:12px; align-items:baseline; margin-top:9px; }
+.gardari-operator-details dt { color:#5c6065; font:400 10px/1.45 var(--mono); text-transform:uppercase; }
+.gardari-operator-details dd { margin:0; color:var(--ink); font:400 15px/1.5 Arial,Helvetica,sans-serif; overflow-wrap:anywhere; }
+.gardari-legal-group a { color:inherit; text-underline-offset:3px; }
+.gardari-legal-group .contact-link { display:block; width:100%; margin:15px 0 0; padding:0; border:0; border-radius:0; background:transparent; color:var(--ink); text-align:left; font:400 12px/1.5 var(--mono); cursor:pointer; }
+.gardari-legal-group .contact-label { display:inline-block; margin-right:12px; color:#5c6065; font-size:10px; text-transform:uppercase; }
+.gardari-privacy-change-button .contact-value { text-decoration:underline; text-underline-offset:3px; }
+@media (max-width:600px) {
+ .gardari-consent-panel { bottom:max(12px, env(safe-area-inset-bottom,0px)); max-height:calc(100dvh - 24px); padding:14px 13px; gap:12px; }
+ .gardari-consent-title { font-size:12px; }
+ .gardari-consent-description { font-size:11px; }
+ .gardari-consent-panel .gardari-consent-actions { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:12px; }
+ .gardari-consent-actions button { font-size:9px; padding-inline:9px; }
+ .gardari-consent-actions .gardari-consent-links > :is(a,button) { font-size:9px; }
+ .gardari-consent-footer { display:grid; grid-template-columns:minmax(0,1fr); justify-items:start; align-items:start; row-gap:8px; margin-top:28px; font-size:9px; }
+ .gardari-operator-details > div { display:block; margin-top:15px; }
+ .gardari-operator-details dt { margin-bottom:3px; }
+ .gardari-operator-details dd { font-size:16.8px; line-height:1.4; }
+ .gardari-legal-group .contact-label { display:block; margin-bottom:3px; }
+}
+html.gallery-tablet-portrait .gardari-consent-panel { left:var(--consent-field-left); width:var(--consent-field-width); }
+@media (prefers-reduced-motion:reduce) { .gardari-consent-actions button { transition:none; } }
+
+/* Homepage legal information: quiet, centred, at the natural screen bottom. */
+body:not(.gallery-page) .matrix-shell { display:flex; flex-direction:column; }
+body:not(.gallery-page) .matrix-frame { display:flex; flex-direction:column; flex:1; }
+body:not(.gallery-page) .matrix-pack { display:flex; flex-direction:column; flex:1; }
+body:not(.gallery-page) .work-matrix { flex-shrink:0; }
+body:not(.gallery-page) .gardari-consent-footer {
+  margin-top:auto; padding-top:36px; justify-content:center;
+  justify-items:center; text-align:center;
+}
+@media (max-width:600px) {
+  body:not(.gallery-page) .gardari-consent-footer { padding-top:28px; }
+}
