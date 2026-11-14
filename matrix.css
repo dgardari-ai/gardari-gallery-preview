@@ -524,6 +524,12 @@
     background: #fff; z-index: 99; pointer-events: none;
   }
   .matrix-header { z-index: 100 !important; }
+  /* Keep the unsafe top edge opaque even when Home's non-fixed menu scrolls up. */
+  body::after {
+    content: ''; position: fixed; top: -100vh; left: 0; right: 0;
+    height: calc(100vh + max(1px, env(safe-area-inset-top, 0px)));
+    background: #fff; z-index: 101; pointer-events: none;
+  }
   .is-section-page .matrix-header {
     top: max(var(--section-menu-current-top), calc(20px + env(safe-area-inset-top, 0px))) !important;
   }
