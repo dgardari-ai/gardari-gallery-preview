@@ -1,2 +1,28 @@
+# Search and link-preview access approved by the site owner on 2026-11-17.
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: Googlebot
+User-agent: bingbot
+User-agent: YandexBot
+User-agent: YandexImages
+User-agent: DuckDuckBot
+User-agent: Applebot
+User-agent: Baiduspider
+User-agent: Slurp
+User-agent: SeznamBot
+User-agent: PetalBot
+User-agent: Sogou
+User-agent: TelegramBot
+User-agent: Twitterbot
+User-agent: facebookexternalhit
+User-agent: WhatsApp
+User-agent: VKShare
+User-agent: Discordbot
+Allow: /
+
+# Other access, including model-training crawlers, retains the previous denial.
 User-agent: *
 Disallow: /
+
+Sitemap: https://gallery.gardari.art/sitemap.xml
