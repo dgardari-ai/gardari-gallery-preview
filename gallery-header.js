@@ -170,7 +170,7 @@
   root.classList.add('gallery-enter-pending');
   function releaseQuote(){gate.quoteReady=true;const callback=pendingQuote;pendingQuote=null;callback?.();}
   function cancel(){for(const animation of [...headerAnimations,...orbAnimations])animation.cancel();headerAnimations=[];orbAnimations=[];}
-  function play(){
+  function play(withArtwork=true){
     const run=++generation;cancel();
     const header=document.querySelector('.matrix-header'),brand=header.querySelector('.brand-pill');
     const matrix=document.querySelector('#work-matrix');
@@ -198,7 +198,11 @@
       if(run!==generation)return;
       headerAnimations.forEach(animation=>animation.cancel());headerAnimations=[];header.dataset.entrance='complete';
     });
-    if(matrix){
+    if(matrix&&withArtwork)playArtwork(matrix,run);
+    root.classList.remove('gallery-enter-pending');
+  }
+  function playArtwork(matrix,run){
+    if(reduced.matches){matrix.dataset.orbEntrance='still';return;}
       const orbs=[...matrix.querySelectorAll(':scope > .work-orb')];
       const columns=Math.max(1,Math.round(matrix.clientWidth/(orbs[0]?.offsetWidth||1)));
       matrix.dataset.orbEntrance='entering';
@@ -210,20 +214,34 @@
         if(run!==generation)return;
         orbAnimations.forEach(animation=>animation.cancel());orbAnimations=[];matrix.dataset.orbEntrance='complete';
       });
-    }
-    root.classList.remove('gallery-enter-pending');
   }
-  async function init(){
-    await document.fonts.ready;
-    if(document.querySelector('#work-matrix'))await window.GalleryArtwork.ready;
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    await Promise.all([...document.querySelectorAll('#work-matrix img')].map(image=>image.decode().catch(()=>{})));
+  function prepareShell(){
     const brand=document.querySelector('.brand-pill');
     root.classList.remove('gallery-enter-pending');
     const style=getComputedStyle(brand);
     shell=document.createElement('span');shell.className='gallery-brand-shell';shell.setAttribute('aria-hidden','true');
     shell.style.borderColor=style.borderTopColor;shell.style.borderWidth=style.borderTopWidth;shell.style.backgroundColor=style.backgroundColor;
-    brand.prepend(shell);brand.classList.add('gallery-brand-entrance');play();
+    brand.prepend(shell);brand.classList.add('gallery-brand-entrance');
+  }
+  async function init(){
+    const matrix=document.querySelector('#work-matrix');
+    const independentMenu=matrix&&matchMedia('(max-width: 600px)').matches;
+    if(independentMenu){
+      if(!reduced.matches)matrix.dataset.orbEntrance='pending';
+      prepareShell();
+      play(false);
+    }
+    try {
+      if(!independentMenu)await document.fonts.ready;
+      if(matrix)await window.GalleryArtwork.ready;
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      if(matrix)await Promise.all([...matrix.querySelectorAll('img')].map(image=>image.decode().catch(()=>{})));
+      if(independentMenu)playArtwork(matrix,generation);
+      else {prepareShell();play();}
+    } catch(error) {
+      if(!independentMenu)throw error;
+      matrix.dataset.orbEntrance='error';
+    }
   }
   document.addEventListener('DOMContentLoaded',()=>init().catch(error=>{
     cancel();root.classList.remove('gallery-enter-pending');releaseQuote();console.error('Gallery entrance:',error);
@@ -270,7 +288,7 @@ function installPhoneLayout() {
   function update() {
     const tablet = window.GalleryTablet.tablet;
     const compact = media.matches;
-    const mode = (compact ? 'compact' : 'wide') + (tablet ? '-tablet-' + innerWidth : '');
+    const mode = (compact ? 'compact' : 'wide') + (tablet ? '-tablet' : '') + (tablet || compact ? '-' + innerWidth : '');
     if (mode !== lastMode) { restore(); lastMode = mode; }
     if (!compact && !tablet) return;
     for (const node of document.querySelectorAll(selector)) {
@@ -278,7 +296,13 @@ function installPhoneLayout() {
       if ((!compact && !action) || originals.has(node)) continue;
       const size = node.matches('.tab-name,.tab-number') ? Math.min(11, Math.max(9, innerWidth * .028)) : parseFloat(getComputedStyle(node).fontSize);
       originals.set(node, {inline: ['font-size','font-weight'].map(property => [property,node.style.getPropertyValue(property),node.style.getPropertyPriority(property)])});
-      node.style.setProperty('font-size', size * (compact ? 1.15 : 1) * (tablet && action ? 1.5 : 1) + 'px', 'important');
+      const desired = size * (compact ? 1.15 : 1) * (tablet && action ? 1.5 : 1);
+      let fontSize = desired + 'px';
+      if (compact && !tablet && node.matches('.tab-name') && node.textContent.trim()) {
+        // Reserve the tile's inner width for the entire short monospace label.
+        fontSize = `min(${fontSize}, calc((var(--phone-menu-tile) - 5.2px) / ${0.61 * node.textContent.trim().length}))`;
+      }
+      node.style.setProperty('font-size', fontSize, 'important');
       if (compact) node.style.setProperty('font-weight', '700', 'important');
       node.dataset.phoneButtonBaseSize = String(size);
     }
@@ -465,7 +489,16 @@ function installPhoneContent() {
           lineValue: title.style.getPropertyValue('line-height'), linePriority: title.style.getPropertyPriority('line-height')};
         titleBases.set(title, base);
       }
-      title.style.setProperty('font-size', (base.size * 1.1) + 'px', 'important');
+      const naturalSize=base.size*1.1;
+      const naturalStyle=getComputedStyle(lines[0]);
+      context.font=`${naturalStyle.fontStyle} ${naturalStyle.fontWeight} ${naturalSize}px ${naturalStyle.fontFamily}`;
+      const tracking=(parseFloat(naturalStyle.letterSpacing)||0)*naturalSize/parseFloat(naturalStyle.fontSize);
+      const words=lines.flatMap(line=>line.textContent.trim().toLocaleUpperCase('ru-RU').split(/\s+/));
+      const longest=Math.max(...words.map(word=>context.measureText(word).width+(word.length-1)*tracking));
+      const limit=Math.max(1,title.clientWidth-base.fillGap-stroke-4);
+      const fittedSize=naturalSize*Math.min(1,limit/Math.max(1,longest));
+      const size=fittedSize+'px';
+      if(title.style.getPropertyValue('font-size')!==size)title.style.setProperty('font-size',size,'important');
       context.font = fontOf(getComputedStyle(lines[0]));
       const firstMetrics = context.measureText(lines[0].textContent.trim().toLocaleUpperCase('ru-RU'));
       const secondMetrics = context.measureText((lines[1] || lines[0]).textContent.trim().toLocaleUpperCase('ru-RU'));

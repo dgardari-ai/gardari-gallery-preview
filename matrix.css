@@ -205,7 +205,8 @@
 /* Prototype-only motion layer; authored geometry and assets are unchanged. */
 .gallery-enter-pending .brand-pill {border-color:transparent!important;background:transparent!important}
 .gallery-enter-pending .brand-disc,.gallery-enter-pending .section-tab,.gallery-enter-pending .brand-quote {opacity:0}
-.gallery-enter-pending #work-matrix > .work-orb {opacity:0}
+.gallery-enter-pending #work-matrix > .work-orb,
+#work-matrix[data-orb-entrance="pending"] > .work-orb {opacity:0}
 .gallery-brand-entrance {position:relative;isolation:isolate;border-color:transparent!important;background:transparent!important}
 .gallery-brand-shell {position:absolute;left:-1px;top:-1px;height:calc(100% + 2px);width:calc(100% + 2px);box-sizing:border-box;border-style:solid;border-radius:inherit;pointer-events:none;z-index:-1}
 .brand-disc {transform-origin:center center}
@@ -245,6 +246,8 @@
     transform: none !important;
     align-items: stretch !important;
   }
+
+  body:not(.gallery-page) .matrix-pack { max-width: 100%; }
 
   .is-section-page .matrix-header {
     width: var(--section-menu-width) !important;

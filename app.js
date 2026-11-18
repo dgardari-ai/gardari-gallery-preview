@@ -28,16 +28,19 @@
     return result;
   }
   function renderMatrix(newEntry = false) {
-    if (!state.works.length) return;
-
-    if (newEntry || !state.order.length) state.order = editorOrder ? editorOrder.map(id=>state.works.find(w=>w.id===id)).filter(Boolean) : shuffled(state.works);
     const tablet = !artist && window.GalleryTablet?.active;
     const diameter = tablet ? $(".matrix-frame").getBoundingClientRect().width / 5 : parseFloat(getComputedStyle(matrix).getPropertyValue("--work-circle-size"));
     if (tablet) matrix.style.setProperty('--tablet-orb-size', diameter + 'px');
     const columns = tablet?5:artist?5:Math.max(1, Math.min(
       Math.floor(($(".matrix-frame").getBoundingClientRect().width + .01) / diameter),
-      Math.floor(state.works.length / number("matrix:rows",5))
+      state.works.length ? Math.floor(state.works.length / number("matrix:rows",5)) : Infinity
     ));
+    // The menu shares its width with the artwork grid, even when data are unavailable.
+    if (!state.works.length) {
+      if (!artist) $("#matrix-pack").style.setProperty("--matrix-columns", String(columns));
+      return;
+    }
+    if (newEntry || !state.order.length) state.order = editorOrder ? editorOrder.map(id=>state.works.find(w=>w.id===id)).filter(Boolean) : shuffled(state.works);
     const rows = tablet ? Math.max(1, Math.min(Math.floor(state.works.length / 5), Math.ceil((innerHeight - (matrix.getBoundingClientRect().top + scrollY)) / diameter))) : (artist ? 2 : number("matrix:rows",5));
     if (!newEntry && columns === state.columns && rows === state.rows && Math.abs(diameter-state.diameter) < .01) return;
     state.rows = rows; state.diameter = diameter;
@@ -61,6 +64,14 @@
 
 
   async function init() {
+    renderMatrix();
+    let layoutPending = false;
+    function updateLayout() {
+      if ($("#work-dialog")?.open) { layoutPending = true; return; }
+      renderMatrix();
+    }
+    new ResizeObserver(updateLayout).observe(artist?$("#artist-work-gallery"):$(".matrix-frame"));
+    if (!artist) addEventListener("resize", updateLayout);
     try {
       const data=await window.GalleryArtwork.ready;
       state.works=data.works;mediaMap=data.mediaMap;
@@ -71,12 +82,6 @@
       matrix.innerHTML = '<p class="matrix-error">Не удалось загрузить произведения. Обновите страницу.</p>';
       matrix.setAttribute("aria-busy", "false");
     }
-    let layoutPending = false;
-    new ResizeObserver(() => {
-      if ($("#work-dialog").open) { layoutPending = true; return; }
-      renderMatrix();
-    }).observe(artist?$("#artist-work-gallery"):$(".matrix-frame"));
-    addEventListener("resize", () => { if (artist) return; if ($("#work-dialog").open) { layoutPending = true; return; } renderMatrix(); });
     $("#work-dialog").addEventListener("close", () => {
       if (!layoutPending) return;
       layoutPending = false;
