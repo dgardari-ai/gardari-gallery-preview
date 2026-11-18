@@ -165,7 +165,8 @@
     cards.forEach((card,i)=>card.classList.toggle('is-active',i===active));panels.forEach((panel,i)=>panel.classList.toggle('is-active',i===active));
     headings.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===active)));
     layout.dataset.activeSection=slides[active].id;layout.dataset.activePhoto=String(photoSlot(active));aliasActive();
-    if(updateHash&&location.hash!=='#'+slides[active].id)history.replaceState(null,'','#'+slides[active].id);
+    if(updateHash&&!window.GalleryWorkNavigation?.catalogId&&location.hash!=='#'+slides[active].id)
+      history.replaceState(history.state,'','#'+slides[active].id);
     reportContext();return true;
   }
   function fitWidth(){const diameter=number('matrix:circleSize',107.1225),rows=number('matrix:rows',5);const columns=Math.max(1,Math.min(Math.floor(($('.matrix-frame').getBoundingClientRect().width+.01)/diameter),Math.floor(60/rows)));$('#matrix-pack').style.setProperty('--matrix-columns',String(columns));window.GalleryHeaderMotion?.update();window.GalleryHeaderQuote?.refit();}

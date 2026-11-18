@@ -1,4 +1,4 @@
-/* Shared Home/Artist orb matrix and full-work panel. */
+/* Shared Home/Artist orb matrix, with links to the artwork pages. */
 (() => {
   "use strict";
   const $ = (selector) => document.querySelector(selector);
@@ -8,7 +8,7 @@
   let mediaMap = {};
   const settings = window.GalleryCustomization;
   const value = settings.value, number = settings.number;
-  let editorOrder = null;
+  let editorOrder = window.GalleryWorkNavigation?.matrixOrder() || null;
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[character]);
@@ -47,13 +47,20 @@
     state.columns = columns;
     if(!artist)$("#matrix-pack").style.setProperty("--matrix-columns", String(columns));
     state.visible = state.order.slice(0, columns * rows);
-    matrix.innerHTML = state.visible.map((work) => `<button type="button" class="work-orb" data-work="${esc(work.id)}" aria-label="Открыть произведение «${esc(work.title)}»">
-      <span class="work-orb-viewport"><img${window.GalleryImages.attributes(safeHref(value(`preview:${work.id}:image`,work.cover)),"orb")} src="${safeHref(value(`preview:${work.id}:image`,work.cover))}" alt="" decoding="async"></span>
-    </button>`).join("");
-    matrix.querySelectorAll("[data-work]").forEach(button=>settings.crop(button.querySelector("img"),button.dataset.work));
+    const workNavigation = window.GalleryWorkNavigation;
+    const linkTarget = workNavigation?.editorCanvas ? ' target="_blank" rel="noopener"' : '';
+    matrix.innerHTML = state.visible.map(work => {
+      const href = workNavigation?.href(work.id);
+      const tag = href ? "a" : "button";
+      const source = safeHref(value(`preview:${work.id}:image`,work.cover));
+      return `<${tag} ${href ? `href="${esc(href)}"${linkTarget}` : 'type="button"'} class="work-orb" data-work="${esc(work.id)}" aria-label="Открыть произведение «${esc(work.title)}» · ${esc(work.medium)}">
+        <span class="work-orb-viewport"><img${window.GalleryImages.attributes(source,"orb")} src="${source}" alt="" decoding="async"></span>
+      </${tag}>`;
+    }).join("");
+    matrix.querySelectorAll("[data-work]").forEach(link=>settings.crop(link.querySelector("img"),link.dataset.work));
     matrix.setAttribute("aria-busy", "false");
     window.dispatchEvent(new CustomEvent("gallery:rendered"));
-    matrix.querySelectorAll("[data-work]").forEach((button) => button.addEventListener("click", () => openWork(button.dataset.work)));
+    matrix.querySelectorAll("button[data-work]").forEach(button => button.addEventListener("click", () => openWork(button.dataset.work)));
     if (newEntry&&!artist) window.GalleryHeaderQuote?.newEntry();
     else window.GalleryHeaderQuote?.refit();
   }
@@ -89,7 +96,7 @@
     });
   }
   window.addEventListener("pageshow", (event) => {
-    if (!event.persisted || !state.works.length) return;
+    if (!event.persisted || !state.works.length || window.GalleryWorkNavigation?.isReturn(event)) return;
     if ($("#work-dialog").open) $("#work-dialog").close();
     editorOrder=null;state.columns=0;renderMatrix(true);
   });

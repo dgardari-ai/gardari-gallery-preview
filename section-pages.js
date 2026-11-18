@@ -1,4 +1,4 @@
-/* New sections use the Gallery intro renderer and the shared artwork drawer. */
+/* Catalogs use the Gallery intro renderer and share stable artwork links. */
 (() => {
   'use strict';
   const MEDIA = {painting:'Живопись/графика',digital:'Digital',glass:'Стекло'};
@@ -83,21 +83,37 @@
   catalog.hidden=!Object.hasOwn(MEDIA,page);
   const artistGallery=document.querySelector('#artist-work-gallery'),selection=data.workGallery;
   artistGallery.hidden=!(page==='artist' && selection);
-  if(page==='artist'&&selection){artistGallery.innerHTML='<div class="work-matrix artist-orb-matrix section-orb-matrix" id="artist-work-matrix" aria-label="'+esc(data.title)+'" aria-busy="true"></div>';links.replaceChildren();links.hidden=true;return;}
+  if(page==='artist'&&selection){artistGallery.innerHTML='<div class="work-matrix artist-orb-matrix section-orb-matrix" id="artist-work-matrix" role="group" aria-label="'+esc(data.title)+'" aria-busy="true"></div>';links.replaceChildren();links.hidden=true;return;}
   if(catalog.hidden && artistGallery.hidden)return;
   const grid=document.querySelector('#works-grid'),filters=document.querySelector('#series-filters');
+  const staticCards = !!grid.querySelector('a[data-work]');
+  grid.setAttribute('aria-busy','true');
   let activeSeries='all',works=[];
   function renderCards(host,selected) {
     const ids=selected.map(work=>work.id);
+    const workNavigation = window.GalleryWorkNavigation;
     host.replaceChildren();
     for(const work of selected) {
-      const button=document.createElement('button');button.type='button';button.className='work-card';button.dataset.work=work.id;
-      button.setAttribute('aria-label',`Открыть произведение «${work.title}»`);
+      const href = workNavigation?.href(work.id);
+      const card = document.createElement(href ? 'a' : 'button');
+      if (href) {
+        card.href = href;
+        if (workNavigation.editorCanvas) {
+          card.target = '_blank';
+          card.rel = 'noopener';
+        }
+      } else {
+        card.type = 'button';
+        card.addEventListener('click', () => window.GalleryArtwork.open(work.id, {ids}));
+      }
+      card.className = 'work-card';
+      card.dataset.work = work.id;
+      card.id = 'work-' + work.id;
+      card.setAttribute('aria-label',`Открыть произведение «${work.title}» · ${work.medium}`);
       const preview=value(`preview:${work.id}:image`,work.cover || work.images?.[0]?.url || '');
       const metadata=cardMetadata(work);
-      button.innerHTML=`<span class="work-card-visual"><img${window.GalleryImages.attributes(window.GalleryArtwork.resolveMedia(preview),"card")} src="${esc(window.GalleryArtwork.resolveMedia(preview))}" alt="${esc(work.title)}" loading="lazy" decoding="async"></span><span class="work-card-copy"><span class="work-card-title">${esc(work.title)}</span>${metadata?`<span class="work-card-label">${esc(metadata)}</span>`:''}</span>`;
-      button.addEventListener('click',()=>window.GalleryArtwork.open(work.id,{ids}));
-      host.append(button);crop(button.querySelector('img'),work.id);
+      card.innerHTML=`<span class="work-card-visual"><img${window.GalleryImages.attributes(window.GalleryArtwork.resolveMedia(preview),"card")} src="${esc(window.GalleryArtwork.resolveMedia(preview))}" alt="${esc(work.title)}" loading="lazy" decoding="async"></span><span class="work-card-copy"><span class="work-card-title">${esc(work.title)}</span>${metadata?`<span class="work-card-label">${esc(metadata)}</span>`:''}</span>`;
+      host.append(card);crop(card.querySelector('img'),work.id);
     }
     host.setAttribute('aria-busy','false');
     host.dataset.workCount=String(selected.length);
@@ -114,5 +130,9 @@
       filters.replaceChildren();
       render();
     }
-  }).catch(()=>{const host=catalog.hidden?artistGallery:grid;host.innerHTML='<p class="section-error" role="status">Не удалось загрузить произведения. Обновите страницу.</p>';host.setAttribute('aria-busy','false');});
+  }).catch(()=>{
+    if (!staticCards) grid.innerHTML='<p class="section-error" role="status">Не удалось загрузить произведения. Обновите страницу.</p>';
+    grid.setAttribute('aria-busy','false');
+    dispatchEvent(new Event('gallery:catalog-fallback'));
+  });
 })();

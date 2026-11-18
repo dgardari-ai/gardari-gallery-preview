@@ -49,13 +49,25 @@
   const {value,number}=window.GalleryCustomization;
   const editorFrame=new URLSearchParams(location.search).has('editor_view') || (['preview','compare-preview'].includes(frameElement?.id) && !!frameElement.closest('.device-shell'));
   const releaseKey=!editorFrame&&document.currentScript?.src?new URL(document.currentScript.src,location.href).searchParams.get('v'):null;
-  function pageHref(file){if(editorFrame){const url=new URL(file,location.href);url.searchParams.set('editor_view',new URLSearchParams(location.search).get('editor_view')||String(Date.now()));return url.href;}if(!releaseKey)return file;const url=new URL(file,location.href);url.searchParams.set('v',releaseKey);return url.href;}
+  const artworkPage = document.body.hasAttribute('data-artwork-page');
+  const siteBase = artworkPage ? new URL('..', location.href) : location.href;
+  function pageHref(file){
+    const url = new URL(file, siteBase), context = new URLSearchParams(location.search);
+    if (editorFrame) url.searchParams.set('editor_view',context.get('editor_view') || String(Date.now()));
+    else if (releaseKey) url.searchParams.set('v',releaseKey);
+    if (context.has('tablet_preview')) url.searchParams.set('tablet_preview',context.get('tablet_preview'));
+    return url.href;
+  }
+  const returningToWork = event => window.GalleryWorkNavigation?.isReturn(event);
   if('scrollRestoration' in history)history.scrollRestoration='manual';
   let entryInteracted=false;
   for(const type of ['wheel','touchstart','pointerdown','keydown'])addEventListener(type,()=>{entryInteracted=true;},{passive:true});
-  if(!editorFrame&&location.hash)history.replaceState(history.state,'',location.pathname+location.search);
-  scrollTo({left:0,top:0,behavior:'instant'});
+  if(!returningToWork()){
+    if(!editorFrame&&location.hash)history.replaceState(history.state,'',location.pathname+location.search);
+    scrollTo({left:0,top:0,behavior:'instant'});
+  }
   addEventListener('pageshow',event=>{
+    if(returningToWork(event))return;
     if(editorFrame&&!event.persisted||!event.persisted&&entryInteracted)return;
     entryInteracted=false;
     if(location.hash)history.replaceState(history.state,'',location.pathname+location.search);
@@ -72,7 +84,7 @@
     return `M ${join} ${edge} H ${size-edge-radius} A ${radius} ${radius} 0 0 1 ${size-edge} ${edge+radius} V ${size-edge-radius} A ${radius} ${radius} 0 0 1 ${size-edge-radius} ${size-edge} H ${edge+radius} A ${radius} ${radius} 0 0 1 ${edge} ${size-edge-radius} V ${join} A ${radius} ${radius} 0 0 1 ${tangent.y} ${tangent.x} A ${notch} ${notch} 0 0 0 ${tangent.x} ${tangent.y} A ${radius} ${radius} 0 0 1 ${join} ${edge} Z`;
   }
   const page=document.body.dataset.page||"home";
-  if(page!=="home") {
+  if(page!=="home"&&!artworkPage) {
     document.body.classList.add("is-section-page");
     const pack=document.querySelector("#matrix-pack"),header=document.querySelector('.matrix-header'),shell=document.querySelector('.matrix-shell');
     let frame=0,lastTop=null,measured={};
@@ -113,6 +125,7 @@
     location.href=pageHref(pages[button.dataset.menu]);
   }));
 
+  if(artworkPage)return;
   if(releaseKey||editorFrame){const brand=document.querySelector('.brand-pill');if(brand)brand.href=pageHref(pages.home);}
 
   const header=document.querySelector('.matrix-header'),nav=document.querySelector('.section-tabs');
@@ -163,6 +176,7 @@
 /* Approved Gallery entrance: shared header; artwork wave on Home only. */
 (() => {
   'use strict';
+  if (document.body.hasAttribute('data-artwork-page')) return;
   const root=document.documentElement, reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const gate=window.GalleryEntrance={quoteReady:false,afterReveal(callback){pendingQuote=callback;}};
   const ease='cubic-bezier(.16,1,.3,1)';
@@ -246,7 +260,7 @@
   document.addEventListener('DOMContentLoaded',()=>init().catch(error=>{
     cancel();root.classList.remove('gallery-enter-pending');releaseQuote();console.error('Gallery entrance:',error);
   }),{once:true});
-  addEventListener('pageshow',event=>{if(event.persisted&&shell){gate.quoteReady=false;play();}});
+  addEventListener('pageshow',event=>{if(event.persisted&&shell&&!window.GalleryWorkNavigation?.isReturn(event)){gate.quoteReady=false;play();}});
   reduced.addEventListener('change',()=>{if(reduced.matches){++generation;cancel();root.classList.remove('gallery-enter-pending');releaseQuote();}});
 })();
 
@@ -257,7 +271,7 @@ function installPhoneLayout() {
 (() => {
   'use strict';
   const pack = document.querySelector('#matrix-pack');
-  if (!pack) return;
+  if (!pack || document.body.hasAttribute('data-artwork-page')) return;
   const root = document.documentElement;
   let lastSize = null;
   function sync() {
@@ -882,7 +896,8 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
  let queued=false;const queue=()=>{if(!queued){queued=true;requestAnimationFrame(()=>{queued=false;sync();});}};
  new ResizeObserver(queue).observe(field);new MutationObserver(queue).observe(root,{attributes:true,attributeFilter:['class']});
  addEventListener('resize',queue,{passive:true});addEventListener('scroll',queue,{passive:true});addEventListener('gallery:ready',queue);visualViewport?.addEventListener('resize',queue,{passive:true});
- const params=new URLSearchParams(location.search), url=new URL('contacts.html',location.href);url.searchParams.set('legal','open');
+ const contactsPath=document.body.hasAttribute('data-artwork-page')?'../contacts.html':'contacts.html';
+ const params=new URLSearchParams(location.search), url=new URL(contactsPath,location.href);url.searchParams.set('legal','open');
  for(const key of ['tablet_preview','v','editor_view'])if(params.has(key))url.searchParams.set(key,params.get(key));url.hash='gardari-legal-details';link.href=url.href;
  function reveal(show,focus=true){if(!legal)return;legal.hidden=!show;link.setAttribute('aria-expanded',String(show));
   if(show)requestAnimationFrame(()=>{sync();legal.scrollIntoView({block:'start',behavior:'instant'});if(focus)legal.querySelector('h3').focus({preventScroll:true});});}

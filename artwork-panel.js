@@ -26,8 +26,11 @@
   // All 60 historical records begin with a title and a fact block. The
   // repeated fields end at the final labeled line (or "ПРИОБРЕСТИ" in
   // Digital). Keep the complete authorial narrative after that boundary.
+  const withoutOrderPrompt = text => text.split(/\r?\n/)
+    .filter(line => !/^заказать работу$/iu.test(line.trim())).join("\n").trim();
+
   function workNarrative(w) {
-    if (w.authorText?.trim()) return w.authorText.trim();
+    if (w.authorText?.trim()) return withoutOrderPrompt(w.authorText);
     const lines = String(w.fullText || "").split(/\r?\n/).map((line) => line.trim());
     if (!lines.length) return "";
     let boundary = 0;
@@ -36,7 +39,7 @@
         boundary = i;
       }
     }
-    return lines.slice(boundary + 1).join("\n").trim();
+    return withoutOrderPrompt(lines.slice(boundary + 1).join("\n"));
   }
 
   // Extracted Tilda line breaks separate prose paragraphs; consecutive short
@@ -67,17 +70,17 @@
   ];
   const workText = w => [w.title,w.series,workNarrative(w)].join(' ').toLowerCase();
   const words = w => new Set((workText(w).match(/[а-яёa-z]{5,}/g)||[]).map(x=>x.slice(0,6)));
-  function relatedWorks(w) {
+  function relatedWorks(w, works = state.works, count = 2) {
     const text=workText(w), own=words(w);
     const themes=themeRoots.map(roots=>roots.some(root=>text.includes(root)));
-    return state.works.filter(other=>other.id!==w.id).map(other=>{
+    return works.filter(other=>other.id!==w.id).map(other=>{
       const ot=workText(other), ow=words(other);
       const shared=[...own].filter(x=>ow.has(x)).length;
       const themesScore=themeRoots.reduce((n,roots,i)=>n+(themes[i]&&roots.some(root=>ot.includes(root))?4:0),0);
       const titleScore=other.title===w.title?100:0;
       const seriesScore=w.series&&other.series===w.series?28:0;
       return {other,score:titleScore+seriesScore+themesScore+12*shared/Math.max(1,Math.sqrt(own.size*ow.size))};
-    }).sort((a,b)=>b.score-a.score||a.other.id.localeCompare(b.other.id)).slice(0,2).map(x=>x.other);
+    }).sort((a,b)=>b.score-a.score||a.other.id.localeCompare(b.other.id)).slice(0,count).map(x=>x.other);
   }
   function relatedMarkup(w) {
     return `<section class="drawer-related" aria-label="Близкие работы"><span class="drawer-related-rule" aria-hidden="true"></span><div class="drawer-related-grid">${relatedWorks(w).map(other=>`<button type="button" class="work-card" data-related-work="${esc(other.id)}" aria-label="Открыть: ${esc(other.title)}"><span class="work-card-visual"><img${window.GalleryImages.attributes(resolveMedia(other.cover||(other.images||[]).find(isArtworkImage)?.url||''),"card")} loading="lazy" decoding="async" src="${safeHref(other.cover||(other.images||[]).find(isArtworkImage)?.url||'')}" alt="${esc(other.title)}"></span><span class="work-card-copy"><span class="work-card-title">${esc(other.title)}</span>${other.series?`<span class="work-card-label">${esc(other.series)}</span>`:''}</span></button>`).join('')}</div></section>`;
@@ -86,13 +89,62 @@
   let purchaseDialog=null;
   function ensurePurchaseDialog(){
     if(purchaseDialog)return purchaseDialog;
+ const asset = (document.body.hasAttribute('data-artwork-page') ? '../' : '') + 'vmg-designer-assets/83849c1ddd3e7ef0813d536f55d56f459f357cc2d066d36c23589704554ede3a.jpg';
  const purchase=document.createElement('dialog');purchase.className='purchase-dialog';purchase.setAttribute('aria-label','Согласовать покупку работы');
- purchase.innerHTML=`<button type="button" class="purchase-close" aria-label="Закрыть окно покупки">×</button><img class="purchase-portrait"${window.GalleryImages.attributes("vmg-designer-assets/83849c1ddd3e7ef0813d536f55d56f459f357cc2d066d36c23589704554ede3a.jpg","portrait")} src="vmg-designer-assets/83849c1ddd3e7ef0813d536f55d56f459f357cc2d066d36c23589704554ede3a.jpg" alt="Денис Гардари"><p class="purchase-message">Чтобы согласовать покупку этой работы, свяжитесь со мной в удобном вам мессенджере.</p><div class="purchase-contacts"><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В TELEGRAM</button><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В ВК МЕССЕНДЖЕРЕ</button><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В МАКС</button></div>`;
+ purchase.innerHTML=`<button type="button" class="purchase-close" aria-label="Закрыть окно покупки">×</button><img class="purchase-portrait"${window.GalleryImages.attributes(asset,"portrait")} src="${asset}" alt="Денис Гардари"><p class="purchase-message">Чтобы согласовать покупку этой работы, свяжитесь со мной в удобном вам мессенджере.</p><div class="purchase-contacts"><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В TELEGRAM</button><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В ВК МЕССЕНДЖЕРЕ</button><button type="button" class="gallery-action-button" aria-disabled="true">НАПИСАТЬ В МАКС</button></div>`;
  document.body.append(purchase);
  purchase.querySelector('.purchase-close').onclick=()=>purchase.close();
  purchase.addEventListener('click',event=>{if(event.target!==purchase)return;const r=purchase.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)purchase.close();});
  purchaseDialog=purchase;return purchase;
 
+  }
+
+  function wirePurchase(button) {
+    if (!button) return;
+    button.hidden = false;
+    button.addEventListener("click", () => {
+      const popup = ensurePurchaseDialog();
+      if (!popup.open) popup.showModal();
+    });
+  }
+
+  function wireWorkPhotos() {
+    const dialog = $("#work-image-viewer");
+    if (!dialog?.showModal) return;
+    const photo = dialog.querySelector("img");
+    let opener;
+    $("main").addEventListener("click", event => {
+      if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const link = event.target.closest?.("a[data-work-photo]");
+      if (!link || dialog.open) return;
+      event.preventDefault();
+      opener = link;
+      photo.alt = link.querySelector("img").alt || link.getAttribute("aria-label").replace(/^Увеличить: /, "");
+      photo.src = link.href;
+      dialog.showModal();
+    });
+    dialog.querySelector(".work-image-close").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("close", () => {
+      if (dialog.open) return;
+      photo.removeAttribute("src");
+      opener?.focus({preventScroll: true});
+      opener = null;
+    });
+  }
+
+  function workDetails(w, options = {}) {
+    const price=w.currentPrice ?? w.historicalPrice;
+    const saleState=options.saleState || w.saleStatus || (/не прода[её]тся/i.test(price||'') ? 'not-for-sale' : /продан/i.test(price||'') ? 'sold' : 'price');
+    const displayPrice=saleState==='sold'?(w.saleLabel||'ПРОДАНО'):saleState==='not-for-sale'?'НЕ ПРОДАЁТСЯ':price;
+    const canBuy=saleState==='price' && !!(price || w.sizePrices) && !/продан|не прода[её]тся/i.test(price||'');
+    const fields = [
+      ["НАПРАВЛЕНИЕ", w.medium], ["СЕРИЯ", w.series], ["ГОД", w.year || "2020"],
+      ["ТЕХНИКА", w.technique], ["РАЗМЕР", w.dimensions],
+      ["ТИРАЖ", w.edition], ["РАЗМЕР / ЦЕНА", saleState==='price' ? String(w.sizePrices||'').split(' | ').join('\n') : ''],
+      ["ЦЕНА", displayPrice]
+    ].filter((entry) => entry[1]).map(([label, value]) =>
+      [label, String(value).replace(/(?<!\d)\.|\.(?!\d)/g, "")]);
+    return {fields, canBuy};
   }
 
   function openWork(id, options = {}) {
@@ -104,17 +156,7 @@
       ? state.visible : state.works.filter((v) => v.medium === w.medium);
     const index = currentList.findIndex((v) => v.id === id) + 1;
     $("#work-counter").textContent = String(index).padStart(2,"0") + "/" + String(currentList.length).padStart(2,"0");
-    const price=w.currentPrice ?? w.historicalPrice;
-    const saleState=options.saleState || w.saleStatus || (/не прода[её]тся/i.test(price||'') ? 'not-for-sale' : /продан/i.test(price||'') ? 'sold' : 'price');
-    const displayPrice=saleState==='sold'?(w.saleLabel||'ПРОДАНО'):saleState==='not-for-sale'?'НЕ ПРОДАЁТСЯ':price;
-    const canBuy=saleState==='price' && !!(price || w.sizePrices) && !/продан|не прода[её]тся/i.test(price||'');
-    const factText = value => String(value).replace(/(?<!\d)\.|\.(?!\d)/g, "");
-    const fields = [
-      ["НАПРАВЛЕНИЕ", w.medium], ["СЕРИЯ", w.series], ["ГОД", w.year || "2020"],
-      ["ТЕХНИКА", w.technique], ["РАЗМЕР", w.dimensions],
-      ["ТИРАЖ", w.edition], ["РАЗМЕР / ЦЕНА", saleState==='price' ? String(w.sizePrices||'').split(' | ').join('\n') : ''],
-      ["ЦЕНА", displayPrice]
-    ].filter((entry) => entry[1]);
+    const {fields, canBuy} = workDetails(w, options);
     const galleryImages = (w.images || []).filter(isArtworkImage);
     const coverUrl = w.cover || galleryImages[0]?.url || "";
     const additionalImages = galleryImages.filter((img) => img.url !== coverUrl);
@@ -123,14 +165,12 @@
       <img class="drawer-cover" src="${safeHref(coverUrl)}" alt="${esc(w.title)}"${imageDimensions(galleryImages.find(image=>image.url===coverUrl))}>
       <h2 class="drawer-title" id="work-title">${esc(w.title)}</h2>
       <div class="drawer-kicker">${esc(w.series || w.medium)}</div>
-      <div class="drawer-meta-wrap${canBuy ? " has-purchase" : ""}${w.sizePrices ? " has-size-prices" : ""}"><span class="work-facts-rule" id="work-facts-top" aria-hidden="true"></span><dl class="drawer-meta">${fields.map(([label, value])=>`<dt>${esc(label)}</dt><dd>${esc(factText(value))}</dd>`).join("")}</dl><div class="drawer-facts-footer"><span class="work-facts-rule work-facts-rule--bottom" id="work-facts-bottom" aria-hidden="true"></span>${canBuy?`<button type="button" class="gallery-action-button drawer-buy">КУПИТЬ ЭТУ РАБОТУ</button>`:""}</div></div>
+      <div class="drawer-meta-wrap${canBuy ? " has-purchase" : ""}${w.sizePrices ? " has-size-prices" : ""}"><span class="work-facts-rule" id="work-facts-top" aria-hidden="true"></span><dl class="drawer-meta">${fields.map(([label, value])=>`<dt>${esc(label)}</dt><dd>${esc(value)}</dd>`).join("")}</dl><div class="drawer-facts-footer"><span class="work-facts-rule work-facts-rule--bottom" id="work-facts-bottom" aria-hidden="true"></span>${canBuy?`<button type="button" class="gallery-action-button drawer-buy">КУПИТЬ ЭТУ РАБОТУ</button>`:""}</div></div>
       ${description ? `<div class="drawer-story">${narrativeMarkup(description)}</div>` : ""}
       ${additionalImages.length ? `<div class="drawer-gallery">${additionalImages.map((img)=>`<img loading="lazy" decoding="async" src="${safeHref(img.url)}" alt="${esc(w.title)} — дополнительное изображение"${imageDimensions(img)}>`).join("")}</div>` : ""}
       ${relatedMarkup(w)}`;
     document.querySelectorAll('[data-related-work]').forEach(button=>button.addEventListener('click',()=>openWork(button.dataset.relatedWork)));
-    document.querySelector('.drawer-buy')?.addEventListener('click',()=>{
-      const popup=ensurePurchaseDialog();if(!popup.open)popup.showModal();
-    });
+    wirePurchase(document.querySelector('.drawer-buy'));
     const dialog = $("#work-dialog");
     if (!dialog.open) dialog.showModal();
     $("#drawer-content").scrollTop = Math.max(0, Number(options.scrollTop)||0);
@@ -291,8 +331,13 @@
   if(typeof window!=='undefined')window.addEventListener('resize',()=>requestAnimationFrame(snapFactRules));
   if(typeof document!=='undefined')document.fonts.ready.then(()=>requestAnimationFrame(snapFactRules));
   
-  if(typeof module==='object'&&module.exports)module.exports={workNarrative,narrativeMarkup,isArtworkImage,canonicalSeries,canonicalWork};
+  if(typeof module==='object'&&module.exports)module.exports={workNarrative,narrativeMarkup,isArtworkImage,canonicalSeries,canonicalWork,workDetails,relatedWorks};
   if(typeof document==='undefined')return;
+  if(document.body.hasAttribute('data-artwork-page')) {
+    wirePurchase(document.querySelector('.drawer-buy'));
+    wireWorkPhotos();
+    return;
+  }
   const ready=init();
   ready.catch(error=>{console.error("Галерея:",error);dispatchEvent(new CustomEvent("gallery:works-error"));});
   window.GalleryArtwork={ready,open:openWork,openForEditor,dialogContext,restoreDialog,resolveMedia};
